@@ -1,12 +1,13 @@
+import { isMp } from '@uni-helper/uni-env'
 /**
- * by 菲鸽 on 2025-08-19
+ * by wenyuj on 2025-08-19
  * 路由拦截，通常也是登录拦截
  * 黑白名单的配置，请看 config.ts 文件， EXCLUDE_LOGIN_PATH_LIST
  */
 import { useTokenStore } from '@/store/token'
 import { isPageTabbar, tabbarStore } from '@/tabbar/store'
 import { getAllPages, getLastPage, HOME_PAGE, parseUrlToObj } from '@/utils/index'
-import { EXCLUDE_LOGIN_PATH_LIST, isNeedLoginMode, LOGIN_PAGE } from './config'
+import { EXCLUDE_LOGIN_PATH_LIST, IS_USE_WX_LOGIN_IN_MP, isNeedLoginMode, LOGIN_PAGE } from './config'
 
 export const FG_LOG_ENABLE = false
 export function judgeIsExcludePath(path: string) {
@@ -45,6 +46,11 @@ export const navigateToInterceptor = {
     // 处理直接进入路由非首页时，tabbarIndex 不正确的问题
     tabbarStore.setAutoCurIdx(path)
 
+    // 小程序里面使用平台自带的登录，则不走下面的逻辑
+    if (isMp && IS_USE_WX_LOGIN_IN_MP) {
+      return true // 明确表示允许路由继续执行
+    }
+
     const tokenStore = useTokenStore()
     FG_LOG_ENABLE && console.log('tokenStore.hasLogin:', tokenStore.hasLogin)
 
@@ -62,7 +68,7 @@ export const navigateToInterceptor = {
         else {
           uni.navigateTo({ url })
         }
-        return true // 明确表示阻止原路由继续执行
+        return true
       }
     }
     let fullPath = path

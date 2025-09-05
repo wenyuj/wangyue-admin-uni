@@ -1,7 +1,7 @@
 {
   "globalStyle": {
     "navigationStyle": "default",
-    "navigationBarTitleText": "unibest",
+    "navigationBarTitleText": "wangyue",
     "navigationBarBackgroundColor": "#f8f8f8",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FFFFFF"
@@ -46,28 +46,6 @@
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "首页"
-      }
-    },
-    {
-      "path": "pages/about/about",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "关于"
-      },
-      "excludeLoginPath": false
-    },
-    {
-      "path": "pages/about/alova",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "Alova 演示"
-      }
-    },
-    {
-      "path": "pages/about/vue-query",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "Vue Query 演示"
       }
     },
     {

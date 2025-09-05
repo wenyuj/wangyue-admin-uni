@@ -1,5 +1,3 @@
-// fix: https://github.com/unibest-tech/unibest/issues/219
-
 // Windows path loader for Node.js ESM
 // This loader converts Windows absolute paths to file:// URLs
 

@@ -9,7 +9,7 @@ const recommendUrl = ref('http://laf.run/signup?code=ohaOgIX')
 //   id: '1234',
 // }
 const initialData = undefined
-const { loading, error, data, run } = useRequest<IFooItem>(() => getFooAPI('菲鸽'), {
+const { loading, error, data, run } = useRequest<IFooItem>(() => getFooAPI('wenyuj'), {
   immediate: true,
   initialData,
 })
