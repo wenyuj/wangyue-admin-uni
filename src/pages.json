@@ -30,10 +30,6 @@
         "pagePath": "pages/index/index"
       },
       {
-        "text": "%tabbar.about%",
-        "pagePath": "pages/about/about"
-      },
-      {
         "text": "%tabbar.me%",
         "pagePath": "pages/me/me"
       }
@@ -46,6 +42,13 @@
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "%tabbar.home%"
+      }
+    },
+    {
+      "path": "pages/about/i18n",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": "%i18n.title%"
       }
     },
     {
