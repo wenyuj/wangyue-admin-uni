@@ -1,5 +1,5 @@
 {
-  // Place your unibest 工作区 snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+  // Place your wangyue 工作区 snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
   // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
   // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
   // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
@@ -15,7 +15,7 @@
   // 	],
   // 	"description": "Log output to console"
   // }
-  "Print unibest Vue3 SFC": {
+  "Print wangyue Vue3 SFC": {
     "scope": "vue",
     "prefix": "v3",
     "body": [
@@ -34,7 +34,7 @@
       "</style>\n",
     ],
   },
-  "Print unibest style": {
+  "Print wangyue style": {
     "scope": "vue",
     "prefix": "st",
     "body": [
@@ -43,7 +43,7 @@
       "</style>\n"
     ],
   },
-  "Print unibest script": {
+  "Print wangyue script": {
     "scope": "vue",
     "prefix": "sc",
     "body": [
@@ -52,7 +52,7 @@
       "</script>\n"
     ],
   },
-  "Print unibest template": {
+  "Print wangyue template": {
     "scope": "vue",
     "prefix": "te",
     "body": [

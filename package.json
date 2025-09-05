@@ -1,25 +1,9 @@
 {
-  "name": "unibest",
+  "name": "wangyue",
   "type": "module",
   "version": "3.13.1",
-  "unibest-version": "3.13.1",
-  "update-time": "2025-09-03",
-  "description": "unibest - 最好的 uniapp 开发模板",
-  "generate-time": "用户创建项目时生成",
-  "author": {
-    "name": "feige996",
-    "zhName": "菲鸽",
-    "email": "1020103647@qq.com",
-    "github": "https://github.com/feige996",
-    "gitee": "https://gitee.com/feige996"
-  },
+  "description": "WangYue开发框架 uniapp 端项目",
   "license": "MIT",
-  "homepage": "https://unibest.tech",
-  "repository": "https://github.com/feige996/unibest",
-  "bugs": {
-    "url": "https://github.com/feige996/unibest/issues",
-    "url-old": "https://github.com/codercup/unibest/issues"
-  },
   "engines": {
     "node": ">=22",
     "pnpm": ">=9 <=10.12"

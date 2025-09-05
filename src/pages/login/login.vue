@@ -34,7 +34,7 @@ function doLogin() {
   userStore.setUserInfo({
     userId: 123456,
     username: 'abc123456',
-    nickname: '菲鸽',
+    nickname: 'wenyuj',
     avatar: 'https://oss.laf.run/ukw0y1-site/avatar.jpg',
   })
   // 这里用单token来模拟
