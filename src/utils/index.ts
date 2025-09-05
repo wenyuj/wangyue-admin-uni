@@ -1,4 +1,5 @@
 import { pages, subPackages } from '@/pages.json'
+import { isPageTabbar } from '@/tabbar/store'
 import { isMpWeixin } from './platform'
 
 export function getLastPage() {
@@ -108,6 +109,11 @@ export function getCurrentPageI18nKey() {
   console.log(currPage)
   console.log(currPage.style.navigationBarTitleText)
   return currPage.style.navigationBarTitleText
+}
+
+export function isCurrentPageTabbar() {
+  const { path } = currRoute()
+  return isPageTabbar(path)
 }
 
 /**

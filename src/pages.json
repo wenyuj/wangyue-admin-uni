@@ -26,15 +26,15 @@
     "spacing": "3px",
     "list": [
       {
-        "text": "首页",
+        "text": "%tabbar.home%",
         "pagePath": "pages/index/index"
       },
       {
-        "text": "关于",
+        "text": "%tabbar.about%",
         "pagePath": "pages/about/about"
       },
       {
-        "text": "我的",
+        "text": "%tabbar.me%",
         "pagePath": "pages/me/me"
       }
     ]
@@ -45,7 +45,7 @@
       "type": "home",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "首页"
+        "navigationBarTitleText": "%tabbar.home%"
       }
     },
     {

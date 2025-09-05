@@ -30,13 +30,13 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     iconPath: 'static/tabbar/home.png',
     selectedIconPath: 'static/tabbar/homeHL.png',
     pagePath: 'pages/index/index',
-    text: '首页',
+    text: '%tabbar.home%',
   },
   {
     iconPath: 'static/tabbar/personal.png',
     selectedIconPath: 'static/tabbar/personalHL.png',
     pagePath: 'pages/me/me',
-    text: '个人',
+    text: '%tabbar.me%',
   },
 ]
 
@@ -56,8 +56,9 @@ export interface CustomTabBarItem {
 // 如果需要配置鼓包，需要在 'tabbar/store.ts' 里面设置，最后在 `tabbar/index.vue` 里面更改鼓包的图片
 export const customTabbarList: CustomTabBarItem[] = [
   {
-    text: '首页',
-    pagePath: 'pages/index/index',
+    // text 和 pagePath 可以自己直接写，也可以通过索引从 nativeTabbarList 中获取
+    text: '%tabbar.home%',
+    pagePath: 'pages/index/index', // pagePath 是两者的关联点
     // 本框架内置了 uniapp 官方UI库 （uni-ui)的图标库
     // 使用方式如：<uni-icons type="home" size="30"/>
     // 图标列表地址：https://uniapp.dcloud.net.cn/component/uniui/uni-icons.html
@@ -67,7 +68,7 @@ export const customTabbarList: CustomTabBarItem[] = [
   },
   {
     pagePath: 'pages/me/me',
-    text: '我的',
+    text: '%tabbar.me%',
     iconType: 'uniUi',
     icon: 'contact',
     // badge: 100,
@@ -121,6 +122,9 @@ export const needHideNativeTabbar = selectedTabbarStrategy === TABBAR_STRATEGY_M
 
 const _tabbarList = customTabbarEnable ? customTabbarList.map(item => ({ text: item.text, pagePath: item.pagePath })) : nativeTabbarList
 export const tabbarList = customTabbarEnable ? customTabbarList : nativeTabbarList
+
+// NATIVE_TABBAR(1) 时，显示原生Tabbar，在i18n的情况下需要 setTabbarItem (框架已经处理)
+export const isNativeTabbar = selectedTabbarStrategy === TABBAR_STRATEGY_MAP.NATIVE_TABBAR
 
 const _tabbar: TabBar = {
   // 只有微信小程序支持 custom。App 和 H5 不生效
