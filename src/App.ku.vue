@@ -33,6 +33,8 @@ defineExpose({
     {{ helloKuRoot }}，这里可以配置全局的东西
   </view>
   <sar-toast-agent />
+  <sar-dialog-agent />
+  <sar-notify-agent />
   <KuRootView />
 
   <FgTabbar v-if="isCurrentPageTabbar" />
