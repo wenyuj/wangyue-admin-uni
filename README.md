@@ -28,3 +28,10 @@
 - web平台： `pnpm build:h5`，打包后的文件在 `dist/build/h5`，可以放到web服务器，如nginx运行。如果最终不是放在根目录，可以在 `manifest.config.ts` 文件的 `h5.router.base` 属性进行修改。
 - weixin平台：`pnpm build:mp`, 打包后的文件在 `dist/build/mp-weixin`，然后通过微信开发者工具导入，并点击右上角的“上传”按钮进行上传。
 - APP平台：`pnpm build:app`, 然后打开 `HBuilderX`，导入刚刚生成的`dist/build/app` 文件夹，选择发行 - APP云打包。(如果是 `安卓` 和 `鸿蒙` 平台，则不用这个方式，可以把整个unibest项目导入到hbx，通过hbx的菜单来发行到对应的平台。)
+
+## 分支说明
+
+- main: 主分支，使用 wot-design-ui 组件库
+- i18n: 国际化分支，使用 wot-design-ui 组件库
+- base-sard-ui: 基础分支，使用 sard-ui 组件库
+- sard-ui-i18n: 基于 base-sard-ui 分支，添加 i18n 多语言功能
