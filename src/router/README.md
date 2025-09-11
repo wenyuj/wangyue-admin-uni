@@ -30,7 +30,7 @@ definePage({
   style: {
     navigationBarTitleText: '关于',
   },
-  // 登录授权(可选)：跟以前的 needLogin 类似功能，但是同时支持黑白名单，详情请见 arc/router 文件夹
+  // 登录授权(可选)：跟以前的 needLogin 类似功能，但是同时支持黑白名单，详情请见 src/router 文件夹
   excludeLoginPath: true,
   // 角色授权(可选)：如果需要根据角色授权，就配置这个
   roleAuth: {
@@ -52,4 +52,4 @@ definePage({
 
 特殊情况例外，如业务需要跨平台复用登录注册页时，也可以用在 `小程序` 上，所以主要还是看业务需求。
 
-通过一个参数 `IS_USE_WX_LOGIN_IN_MP` 来控制是否在 `小程序` 中使用 `小程序` 默认的登录逻辑。
+通过一个参数 `LOGIN_PAGE_ENABLE_IN_MP` 来控制是否在 `小程序` 中使用 `H5登录页` 的登录逻辑。
