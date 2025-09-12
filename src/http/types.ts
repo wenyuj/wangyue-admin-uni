@@ -11,8 +11,7 @@ export type CustomRequestOptions = UniApp.RequestOptions & {
 export interface IResponse<T = any> {
   code: number | string
   data: T
-  message: string
-  status: string | number
+  msg: string
 }
 
 // 分页请求参数
