@@ -99,7 +99,7 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
               <wd-icon :name="item.icon" size="20" />
             </template>
             <template v-if="item.iconType === 'unocss' || item.iconType === 'iconfont'">
-              <view :class="item.icon" class="text-20px" />
+              <view :class="tabbarStore.curIdx === index ? item.iconActive || item.icon : item.icon" class="text-20px" />
             </template>
             <template v-if="item.iconType === 'image'">
               <image :src="getImageByIndex(index, item)" mode="scaleToFill" class="h-20px w-20px" />
