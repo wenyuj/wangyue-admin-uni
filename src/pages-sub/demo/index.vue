@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 // code here
-import RequestComp from './components/request.vue'
-
 definePage({
   style: {
     navigationBarTitleText: '分包页面',
@@ -19,9 +17,6 @@ definePage({
     </view>
     <view class="text-blue-500">
       分包页面里面的components示例
-    </view>
-    <view>
-      <RequestComp />
     </view>
   </view>
 </template>
