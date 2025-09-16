@@ -26,7 +26,7 @@ import { defineConfig, loadEnv } from 'vite'
 import ViteRestart from 'vite-plugin-restart'
 
 // https://vitejs.dev/config/
-export default ({ command, mode }) => {
+export default defineConfig(({ command, mode }) => {
   // @see https://unocss.dev/
   // const UnoCSS = (await import('unocss/vite')).default
   // console.log(mode === process.env.NODE_ENV) // true
@@ -170,4 +170,4 @@ export default ({ command, mode }) => {
       minify: mode === 'development' ? false : 'esbuild',
     },
   })
-}
+})

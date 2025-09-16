@@ -21,7 +21,7 @@ const { userInfo } = storeToRefs(userStore)
 // #ifndef MP-WEIXIN
 // 上传头像
 const { run: uploadAvatar } = useUpload<IUploadSuccessInfo>(
-  import.meta.env.VITE_UPLOAD_BASEURL,
+  '/upload',
   {},
   {
     onSuccess: (res) => {
@@ -53,7 +53,7 @@ function onChooseAvatar(e: any) {
   console.log('选择头像', e.detail)
   const { avatarUrl } = e.detail
   const { run } = useUpload<IUploadSuccessInfo>(
-    import.meta.env.VITE_UPLOAD_BASEURL,
+    '/upload',
     {},
     {
       onSuccess: (res) => {
