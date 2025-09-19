@@ -4,9 +4,9 @@ export default [
   {
     schemaPath: 'http://petstore.swagger.io/v2/swagger.json',
     serversPath: './src/service',
-    requestLibPath: `import { CustomRequestOptions } from '@/http/types';`,
-    requestOptionsType: 'CustomRequestOptions',
-    isGenReactQuery: true,
+    // requestLibPath: `import { CustomRequestOptions } from '@/http/types';`,
+    // requestOptionsType: 'CustomRequestOptions',
+    isGenReactQuery: false,
     reactQueryMode: 'vue',
     isGenJavaScript: false,
   },

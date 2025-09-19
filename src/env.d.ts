@@ -15,12 +15,6 @@ interface ImportMetaEnv {
   readonly VITE_SERVER_PORT: string
   /** 后台接口地址 */
   readonly VITE_SERVER_BASEURL: string
-  /** H5是否需要代理 */
-  readonly VITE_APP_PROXY_ENABLE: 'true' | 'false'
-  /** H5是否需要代理，需要的话有个前缀 */
-  readonly VITE_APP_PROXY_PREFIX: string // 一般是/api
-  /** 后端是否有统一前缀 /api */
-  readonly VITE_SERVER_HAS_API_PREFIX: 'true' | 'false'
   /** 认证模式，'single' | 'double' ==> 单token | 双token */
   readonly VITE_AUTH_MODE: 'single' | 'double'
   /** 上传图片地址 */

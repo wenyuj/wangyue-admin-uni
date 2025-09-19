@@ -1,5 +1,5 @@
 import { getCurrentInstance, type App } from 'vue'
-import { useUserLoginStore } from '@/store/login'
+import { useUserLoginStore } from '@/store/auth'
 import { Pages } from './pages'
 import { LoginPopupViewer } from './loginPopupServices'
 import Loading from './Loading'

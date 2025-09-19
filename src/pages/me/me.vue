@@ -13,6 +13,7 @@ definePage({
 })
 
 const userStore = useUserStore()
+userStore.fetchUserInfo()
 const tokenStore = useTokenStore()
 // 使用storeToRefs解构userInfo
 const { userInfo } = storeToRefs(userStore)
