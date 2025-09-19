@@ -5,6 +5,8 @@ import { createAlova } from 'alova'
 import { createServerTokenAuthentication } from 'alova/client'
 import VueHook from 'alova/vue'
 import { LOGIN_PAGE } from '@/router/config'
+import { useTokenStore } from '@/store'
+import { isDoubleTokenMode } from '@/utils'
 import { ContentTypeEnum, ResultEnum, ShowMessage } from './tools/enum'
 
 // 配置动态Tag
@@ -20,18 +22,27 @@ const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthenticati
   typeof VueHook,
   typeof uniappRequestAdapter
 >({
-  refreshTokenOnError: {
-    isExpired: (error) => {
-      return error.response?.status === ResultEnum.Unauthorized
+  assignToken: (method) => {
+    const tokenStore = useTokenStore()
+    method.config.headers.Authorization = `Bearer ${tokenStore.validToken}`
+  },
+  refreshTokenOnSuccess: {
+    isExpired: (response, method) => {
+      const data = (response as UniNamespace.RequestSuccessCallbackResult).data as IResponse
+      return data?.code === ResultEnum.Unauthorized
     },
-    handler: async () => {
-      try {
-        // await authLogin();
+    handler: async (response, method) => {
+      const tokenStore = useTokenStore()
+      // 判断是否为双 token 模式
+      if (isDoubleTokenMode) {
+        // 双 token 模式，刷新 token
       }
-      catch (error) {
-        // 切换到登录页
-        await uni.reLaunch({ url: LOGIN_PAGE })
-        throw error
+      else {
+        // 单 token 模式
+        const data = (response as UniNamespace.RequestSuccessCallbackResult).data as IResponse
+        tokenStore.clearTokenInfo()
+        uni.reLaunch({ url: LOGIN_PAGE })
+        throw new Error(data.msg)
       }
     },
   },
@@ -41,7 +52,7 @@ const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthenticati
  * alova 请求实例
  */
 const alovaInstance = createAlova({
-  baseURL: import.meta.env.VITE_APP_PROXY_PREFIX,
+  baseURL: API_DOMAINS.DEFAULT,
   ...AdapterUniapp(),
   timeout: 5000,
   statesHook: VueHook,
@@ -53,23 +64,11 @@ const alovaInstance = createAlova({
       Accept: 'application/json, text/plain, */*',
       ...method.config.headers,
     }
-
     const { config } = method
-    const ignoreAuth = !config.meta?.ignoreAuth
-    console.log('ignoreAuth===>', ignoreAuth)
-    // 处理认证信息   自行处理认证问题
-    if (ignoreAuth) {
-      const token = 'getToken()'
-      if (!token) {
-        throw new Error('[请求错误]：未登录')
-      }
-      // method.config.headers.token = token;
-    }
 
     // 处理动态域名
     if (config.meta?.domain) {
       method.baseURL = config.meta.domain
-      console.log('当前域名', method.baseURL)
     }
   }),
 
@@ -90,7 +89,6 @@ const alovaInstance = createAlova({
     // 处理 HTTP 状态码错误
     if (statusCode !== 200) {
       const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
-      console.error('errorMessage===>', errorMessage)
       uni.showToast({
         title: errorMessage,
         icon: 'error',
@@ -114,4 +112,4 @@ const alovaInstance = createAlova({
   }),
 })
 
-export const http = alovaInstance
+export const alova = alovaInstance

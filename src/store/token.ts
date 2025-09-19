@@ -1,53 +1,64 @@
-import type { IAuthLoginRes } from '@/api/types/login'
+import type { ILoginForm } from '@/api/methods/auth'
+import type { TokenInfo } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue' // 修复：导入 computed
 import {
-  login as _login,
+  auth as _login,
   logout as _logout,
   refreshToken as _refreshToken,
   wxLogin as _wxLogin,
   getWxCode,
-} from '@/api/login'
-import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
+} from '@/api/methods/auth'
 import { isDoubleTokenMode } from '@/utils'
 import { useUserStore } from './user'
 
 // 初始化状态
-const tokenInfoState = isDoubleTokenMode
+const tokenInfoState: TokenInfo = isDoubleTokenMode
   ? {
       accessToken: '',
-      accessExpiresIn: 0,
+      accessExpireTime: 0,
       refreshToken: '',
-      refreshExpiresIn: 0,
+      refreshExpireTime: 0,
     }
   : {
-      token: '',
-      expiresIn: 0,
+      accessToken: '',
+      accessExpireTime: 0,
     }
 
 export const useTokenStore = defineStore(
   'token',
   () => {
     // 定义用户信息
-    const tokenInfo = ref<IAuthLoginRes>({ ...tokenInfoState })
+    const tokenInfo = ref<TokenInfo>({ ...tokenInfoState })
     // 设置用户信息
-    const setTokenInfo = (val: IAuthLoginRes) => {
+    const setTokenInfo = (val: TokenInfo) => {
       tokenInfo.value = val
 
       // 计算并存储过期时间
       const now = Date.now()
-      if (isSingleTokenRes(val)) {
+      if (!isDoubleTokenMode) {
         // 单token模式
-        const expireTime = now + val.expiresIn * 1000
+        const expireTime = now + val.accessExpireTime * 1000
         uni.setStorageSync('accessTokenExpireTime', expireTime)
       }
-      else if (isDoubleTokenRes(val)) {
+      else {
         // 双token模式
-        const accessExpireTime = now + val.accessExpiresIn * 1000
-        const refreshExpireTime = now + val.refreshExpiresIn * 1000
+        const accessExpireTime = now + val.accessExpireTime * 1000
+        const refreshExpireTime = now + val.refreshExpireTime * 1000
         uni.setStorageSync('accessTokenExpireTime', accessExpireTime)
         uni.setStorageSync('refreshTokenExpireTime', refreshExpireTime)
       }
+    }
+
+    const clearTokenInfo = () => {
+      // 清除存储的过期时间
+      uni.removeStorageSync('accessTokenExpireTime')
+      uni.removeStorageSync('refreshTokenExpireTime')
+      console.log('退出登录-清除用户信息')
+      tokenInfo.value = { ...tokenInfoState }
+      uni.removeStorageSync('accessToken')
+      const userStore = useUserStore()
+      userStore.clearUserInfo()
     }
 
     /**
@@ -85,7 +96,7 @@ export const useTokenStore = defineStore(
      * 登录成功后处理逻辑
      * @param tokenInfo 登录返回的token信息
      */
-    async function _postLogin(tokenInfo: IAuthLoginRes) {
+    async function _postLogin(tokenInfo: TokenInfo) {
       setTokenInfo(tokenInfo)
       const userStore = useUserStore()
       await userStore.fetchUserInfo()
@@ -96,16 +107,12 @@ export const useTokenStore = defineStore(
      * @param credentials 登录参数
      * @returns 登录结果
      */
-    const login = async (credentials: {
-      username: string
-      password: string
-      code: string
-      uuid: string
-    }) => {
+    const login = async (credentials: ILoginForm) => {
       try {
+        console.log('登录-credentials: ', credentials)
         const res = await _login(credentials)
         console.log('普通登录-res: ', res)
-        await _postLogin(res.data)
+        await _postLogin(res)
         uni.showToast({
           title: '登录成功',
           icon: 'success',
@@ -133,7 +140,7 @@ export const useTokenStore = defineStore(
         console.log('微信登录-code: ', code)
         const res = await _wxLogin(code)
         console.log('微信登录-res: ', res)
-        await _postLogin(res.data)
+        await _postLogin(res)
         uni.showToast({
           title: '登录成功',
           icon: 'success',
@@ -158,19 +165,9 @@ export const useTokenStore = defineStore(
         // TODO 实现自己的退出登录逻辑
         await _logout()
       }
-      catch (error) {
-        console.error('退出登录失败:', error)
-      }
       finally {
         // 无论成功失败，都需要清除本地token信息
-        // 清除存储的过期时间
-        uni.removeStorageSync('accessTokenExpireTime')
-        uni.removeStorageSync('refreshTokenExpireTime')
-        console.log('退出登录-清除用户信息')
-        tokenInfo.value = { ...tokenInfoState }
-        uni.removeStorageSync('token')
-        const userStore = useUserStore()
-        userStore.clearUserInfo()
+        clearTokenInfo()
       }
     }
 
@@ -180,20 +177,17 @@ export const useTokenStore = defineStore(
      */
     const refreshToken = async () => {
       if (!isDoubleTokenMode) {
-        console.error('单token模式不支持刷新token')
         throw new Error('单token模式不支持刷新token')
       }
-
+      // 安全检查，确保refreshToken存在
+      if (!tokenInfo.value.refreshToken) {
+        throw new Error('无效的refreshToken')
+      }
       try {
-        // 安全检查，确保refreshToken存在
-        if (!isDoubleTokenRes(tokenInfo.value) || !tokenInfo.value.refreshToken) {
-          throw new Error('无效的refreshToken')
-        }
-
         const refreshToken = tokenInfo.value.refreshToken
         const res = await _refreshToken(refreshToken)
         console.log('刷新token-res: ', res)
-        setTokenInfo(res.data)
+        setTokenInfo(res)
         return res
       }
       catch (error) {
@@ -212,13 +206,7 @@ export const useTokenStore = defineStore(
       if (isTokenExpired.value) {
         return ''
       }
-
-      if (!isDoubleTokenMode) {
-        return isSingleTokenRes(tokenInfo.value) ? tokenInfo.value.token : ''
-      }
-      else {
-        return isDoubleTokenRes(tokenInfo.value) ? tokenInfo.value.accessToken : ''
-      }
+      return tokenInfo.value.accessToken
     })
 
     /**
@@ -228,12 +216,7 @@ export const useTokenStore = defineStore(
       if (!tokenInfo.value) {
         return false
       }
-      if (isDoubleTokenMode) {
-        return isDoubleTokenRes(tokenInfo.value) && !!tokenInfo.value.accessToken
-      }
-      else {
-        return isSingleTokenRes(tokenInfo.value) && !!tokenInfo.value.token
-      }
+      return !!tokenInfo.value.accessToken
     })
 
     /**
@@ -279,6 +262,7 @@ export const useTokenStore = defineStore(
       // 调试或特殊场景可能需要直接访问的信息
       tokenInfo,
       setTokenInfo,
+      clearTokenInfo,
     }
   },
   {
