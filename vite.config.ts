@@ -24,6 +24,7 @@ import UnoCSS from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { defineConfig, loadEnv } from 'vite'
 import ViteRestart from 'vite-plugin-restart'
+import openDevTools from './scripts/open-dev-tools'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -68,6 +69,18 @@ export default defineConfig(({ command, mode }) => {
       UniLayouts(),
       UniPlatform(),
       UniManifest(),
+      // Optimization 插件需要 page.json 文件，故应在 UniPages 插件之后执行
+      Optimization({
+        enable: {
+          'optimization': true,
+          'async-import': true,
+          'async-component': true,
+        },
+        dts: {
+          base: 'src/types',
+        },
+        logger: false,
+      }),
       // UniXXX 需要在 Uni 之前引入
       {
         // 临时解决 dcloudio 官方的 @dcloudio/uni-mp-compiler 出现的编译 BUG
@@ -88,19 +101,6 @@ export default defineConfig(({ command, mode }) => {
         dirs: ['src/hooks'], // 自动导入 hooks
         vueTemplate: true, // default false
       }),
-      // Optimization 插件需要 page.json 文件，故应在 UniPages 插件之后执行
-      Optimization({
-        enable: {
-          'optimization': true,
-          'async-import': true,
-          'async-component': true,
-        },
-        dts: {
-          base: 'src/types',
-        },
-        logger: false,
-      }),
-
       ViteRestart({
         // 通过这个插件，在修改vite.config.js文件则不需要重新运行也生效配置
         restart: ['vite.config.js'],
@@ -132,6 +132,8 @@ export default defineConfig(({ command, mode }) => {
       // 若存在改变 pages.json 的插件，请将 UniKuRoot 放置其后
       UniKuRoot(),
       Uni(),
+      // 自动打开开发者工具插件 (必须修改 .env 文件中的 VITE_WX_APPID)
+      openDevTools(),
     ],
     define: {
       __UNI_PLATFORM__: JSON.stringify(UNI_PLATFORM),

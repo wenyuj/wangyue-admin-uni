@@ -7,8 +7,6 @@ import { alova } from '@/http/alova'
 export interface ILoginForm {
   username: string
   password: string
-  code?: string
-  uuid?: string
 }
 
 /**
