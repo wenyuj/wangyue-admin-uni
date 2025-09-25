@@ -54,7 +54,7 @@ const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthenticati
 const alovaInstance = createAlova({
   baseURL: API_DOMAINS.DEFAULT,
   ...AdapterUniapp(),
-  timeout: 5000,
+  timeout: 10000,
   statesHook: VueHook,
 
   beforeRequest: onAuthRequired((method) => {
@@ -72,43 +72,52 @@ const alovaInstance = createAlova({
     }
   }),
 
-  responded: onResponseRefreshToken((response, method) => {
-    const { config } = method
-    const { requestType } = config
-    const {
-      statusCode,
-      data: rawData,
-      errMsg,
-    } = response as UniNamespace.RequestSuccessCallbackResult
+  responded: onResponseRefreshToken({
+    onSuccess: (response, method) => {
+      const { config } = method
+      const { requestType } = config
+      const {
+        statusCode,
+        data: rawData,
+        errMsg,
+      } = response as UniNamespace.RequestSuccessCallbackResult
 
-    // 处理特殊请求类型（上传/下载）
-    if (requestType === 'upload' || requestType === 'download') {
-      return response
-    }
+      // 处理特殊请求类型（上传/下载）
+      if (requestType === 'upload' || requestType === 'download') {
+        return response
+      }
 
-    // 处理 HTTP 状态码错误
-    if (statusCode !== 200) {
-      const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
+      // 处理 HTTP 状态码错误
+      if (statusCode !== 200) {
+        const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
+        uni.showToast({
+          title: errorMessage,
+          icon: 'error',
+        })
+        throw new Error(`${errorMessage}：${errMsg}`)
+      }
+
+      // 处理业务逻辑错误
+      const { code, msg, data } = rawData as IResponse
+      if (code !== ResultEnum.Success) {
+        if (config.meta?.toast !== false) {
+          uni.showToast({
+            title: msg,
+            icon: 'error',
+          })
+        }
+        throw new Error(`请求错误[${code}]：${msg}`)
+      }
+      // 处理成功响应，返回业务数据
+      return data
+    },
+    onError: () => {
       uni.showToast({
-        title: errorMessage,
+        title: '网络异常，请检查网络',
         icon: 'error',
       })
-      throw new Error(`${errorMessage}：${errMsg}`)
-    }
-
-    // 处理业务逻辑错误
-    const { code, msg, data } = rawData as IResponse
-    if (code !== ResultEnum.Success) {
-      if (config.meta?.toast !== false) {
-        uni.showToast({
-          title: msg,
-          icon: 'none',
-        })
-      }
-      throw new Error(`请求错误[${code}]：${msg}`)
-    }
-    // 处理成功响应，返回业务数据
-    return data
+      throw new Error('网络异常，请检查网络')
+    },
   }),
 })
 
