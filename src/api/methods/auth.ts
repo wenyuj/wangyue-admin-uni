@@ -1,4 +1,4 @@
-import type { IUpdateInfo, IUpdatePassword, IUserInfoRes, TokenInfo } from '../types/login'
+import type { IUpdateInfo, IUpdatePassword, TokenInfo, UserInfo } from '../types/login'
 import { alova } from '@/http/alova'
 
 /**
@@ -29,7 +29,7 @@ export function refreshToken(refreshToken: string) {
  * 获取用户信息
  */
 export function getUserInfo() {
-  return alova.Get<IUserInfoRes>('/auth/userinfo')
+  return alova.Get<UserInfo>('/auth/userinfo')
 }
 
 /**

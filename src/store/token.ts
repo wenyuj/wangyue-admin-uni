@@ -1,14 +1,7 @@
-import type { ILoginForm } from '@/api/methods/auth'
 import type { TokenInfo } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue' // 修复：导入 computed
-import {
-  auth as _login,
-  logout as _logout,
-  refreshToken as _refreshToken,
-  wxLogin as _wxLogin,
-  getWxCode,
-} from '@/api/methods/auth'
+import { refreshToken as _refreshToken } from '@/api/methods/auth'
 import { isDoubleTokenMode } from '@/utils'
 import { useUserStore } from './user'
 
@@ -32,7 +25,9 @@ export const useTokenStore = defineStore(
     const tokenInfo = ref<TokenInfo>({ ...tokenInfoState })
     // 设置用户信息
     const setTokenInfo = (val: TokenInfo) => {
-      tokenInfo.value = val
+      tokenInfo.value = {
+        ...val,
+      }
 
       // 计算并存储过期时间
       const now = Date.now()
@@ -48,13 +43,14 @@ export const useTokenStore = defineStore(
         uni.setStorageSync('accessTokenExpireTime', accessExpireTime)
         uni.setStorageSync('refreshTokenExpireTime', refreshExpireTime)
       }
+      const userStore = useUserStore()
+      userStore.refreshUserInfo()
     }
 
     const clearTokenInfo = () => {
       // 清除存储的过期时间
       uni.removeStorageSync('accessTokenExpireTime')
       uni.removeStorageSync('refreshTokenExpireTime')
-      console.log('退出登录-清除用户信息')
       tokenInfo.value = { ...tokenInfoState }
       uni.removeStorageSync('accessToken')
       const userStore = useUserStore()
@@ -93,85 +89,6 @@ export const useTokenStore = defineStore(
     })
 
     /**
-     * 登录成功后处理逻辑
-     * @param tokenInfo 登录返回的token信息
-     */
-    async function _postLogin(tokenInfo: TokenInfo) {
-      setTokenInfo(tokenInfo)
-      const userStore = useUserStore()
-      await userStore.fetchUserInfo()
-    }
-
-    /**
-     * 用户登录
-     * @param credentials 登录参数
-     * @returns 登录结果
-     */
-    const login = async (credentials: ILoginForm) => {
-      try {
-        console.log('登录-credentials: ', credentials)
-        const res = await _login(credentials)
-        console.log('普通登录-res: ', res)
-        await _postLogin(res)
-        uni.showToast({
-          title: '登录成功',
-          icon: 'success',
-        })
-        return res
-      }
-      catch (error) {
-        console.error('登录失败:', error)
-        uni.showToast({
-          title: '登录失败，请重试',
-          icon: 'error',
-        })
-        throw error
-      }
-    }
-
-    /**
-     * 微信登录
-     * @returns 登录结果
-     */
-    const wxLogin = async () => {
-      try {
-        // 获取微信小程序登录的code
-        const code = await getWxCode()
-        console.log('微信登录-code: ', code)
-        const res = await _wxLogin(code)
-        console.log('微信登录-res: ', res)
-        await _postLogin(res)
-        uni.showToast({
-          title: '登录成功',
-          icon: 'success',
-        })
-        return res
-      }
-      catch (error) {
-        console.error('微信登录失败:', error)
-        uni.showToast({
-          title: '微信登录失败，请重试',
-          icon: 'error',
-        })
-        throw error
-      }
-    }
-
-    /**
-     * 退出登录 并 删除用户信息
-     */
-    const logout = async () => {
-      try {
-        // TODO 实现自己的退出登录逻辑
-        await _logout()
-      }
-      finally {
-        // 无论成功失败，都需要清除本地token信息
-        clearTokenInfo()
-      }
-    }
-
-    /**
      * 刷新token
      * @returns 刷新结果
      */
@@ -186,7 +103,6 @@ export const useTokenStore = defineStore(
       try {
         const refreshToken = tokenInfo.value.refreshToken
         const res = await _refreshToken(refreshToken)
-        console.log('刷新token-res: ', res)
         setTokenInfo(res)
         return res
       }
@@ -223,7 +139,6 @@ export const useTokenStore = defineStore(
      * 检查是否已登录且token有效
      */
     const hasValidLogin = computed(() => {
-      console.log('hasValidLogin', hasLoginInfo.value, !isTokenExpired.value)
       return hasLoginInfo.value && !isTokenExpired.value
     })
 
@@ -246,11 +161,6 @@ export const useTokenStore = defineStore(
     }
 
     return {
-      // 核心API方法
-      login,
-      wxLogin,
-      logout,
-
       // 认证状态判断（最常用的）
       hasLogin: hasValidLogin,
 

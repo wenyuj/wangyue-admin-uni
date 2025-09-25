@@ -14,8 +14,8 @@ export interface TokenInfo {
 /**
  * 用户信息
  */
-export interface IUserInfoRes {
-  userId: number
+export interface UserInfo {
+  accountId: number
   username: string
   nickname: string
   avatar?: string
