@@ -4,6 +4,7 @@ import AdapterUniapp from '@alova/adapter-uniapp'
 import { createAlova } from 'alova'
 import { createServerTokenAuthentication } from 'alova/client'
 import VueHook from 'alova/vue'
+import { toast } from 'sard-uniapp'
 import { LOGIN_PAGE } from '@/router/config'
 import { useTokenStore } from '@/store'
 import { isDoubleTokenMode } from '@/utils'
@@ -90,10 +91,7 @@ const alovaInstance = createAlova({
       // 处理 HTTP 状态码错误
       if (statusCode !== 200) {
         const errorMessage = ShowMessage(statusCode) || `HTTP请求错误[${statusCode}]`
-        uni.showToast({
-          title: errorMessage,
-          icon: 'error',
-        })
+        toast.fail(errorMessage)
         throw new Error(`${errorMessage}：${errMsg}`)
       }
 
@@ -101,10 +99,7 @@ const alovaInstance = createAlova({
       const { code, msg, data } = rawData as IResponse
       if (code !== ResultEnum.Success) {
         if (config.meta?.toast !== false) {
-          uni.showToast({
-            title: msg,
-            icon: 'error',
-          })
+          toast.fail(msg)
         }
         throw new Error(`请求错误[${code}]：${msg}`)
       }
@@ -112,10 +107,7 @@ const alovaInstance = createAlova({
       return data
     },
     onError: () => {
-      uni.showToast({
-        title: '网络异常，请检查网络',
-        icon: 'error',
-      })
+      toast.fail('网络异常，请检查网络')
       throw new Error('网络异常，请检查网络')
     },
   }),
