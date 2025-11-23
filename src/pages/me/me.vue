@@ -13,6 +13,7 @@ definePage({
 })
 
 const userStore = useUserStore()
+userStore.fetchUserInfo()
 const tokenStore = useTokenStore()
 // 使用storeToRefs解构userInfo
 const { userInfo } = storeToRefs(userStore)
@@ -20,7 +21,7 @@ const { userInfo } = storeToRefs(userStore)
 // #ifndef MP-WEIXIN
 // 上传头像
 const { run: uploadAvatar } = useUpload<IUploadSuccessInfo>(
-  import.meta.env.VITE_UPLOAD_BASEURL,
+  '/upload',
   {},
   {
     onSuccess: (res) => {
@@ -34,9 +35,9 @@ const { run: uploadAvatar } = useUpload<IUploadSuccessInfo>(
 // 微信小程序下登录
 async function handleLogin() {
   // #ifdef MP-WEIXIN
-
   // 微信登录
   await tokenStore.wxLogin()
+
   // #endif
   // #ifndef MP-WEIXIN
   uni.navigateTo({
@@ -52,7 +53,7 @@ function onChooseAvatar(e: any) {
   console.log('选择头像', e.detail)
   const { avatarUrl } = e.detail
   const { run } = useUpload<IUploadSuccessInfo>(
-    import.meta.env.VITE_UPLOAD_BASEURL,
+    '/upload',
     {},
     {
       onSuccess: (res) => {

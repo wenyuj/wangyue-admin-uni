@@ -2,9 +2,7 @@
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { tabbarList } from '@/tabbar/config'
-import { isPageTabbar } from '@/tabbar/store'
 import { ensureDecodeURIComponent } from '@/utils'
-import { parseUrlToObj } from '@/utils/index'
 
 definePage({
   style: {
@@ -35,13 +33,17 @@ async function doLogin() {
     // 有的时候后端会用一个接口返回token和用户信息，有的时候会分开2个接口（各有利弊，看业务场景和系统复杂度），这里使用2个接口返回的来模拟
     // 1/2 调用接口回来后设置token信息
     // 这里用单token来模拟
-    tokenStore.setTokenInfo({
-      token: '123456',
-      expiresIn: 60 * 60 * 24 * 7,
+    tokenStore.login({
+      username: 'admin',
+      password: '123456',
     })
+    // tokenStore.setTokenInfo({
+    //   token: '123456',
+    //   expiresIn: 60 * 60 * 24 * 7,
+    // })
 
     // 2/2 调用接口回来后设置用户信息
-    // const res = await login({
+    // const res = await auth({
     //   username: '菲鸽',
     //   password: '123456',
     // })
@@ -58,30 +60,30 @@ async function doLogin() {
   catch (error) {
     console.log('登录失败', error)
   }
-  let path = redirectUrl.value
-  if (!path.startsWith('/')) {
-    path = `/${path}`
-  }
-  const { path: _path, query } = parseUrlToObj(path)
-  console.log('_path:', _path, 'query:', query, 'path:', path)
-  console.log('isPageTabbar(_path):', isPageTabbar(_path))
-  if (isPageTabbar(_path)) {
-    // 经过我的测试 switchTab 不能带 query 参数, 不管是放到 url  还是放到 query ,
-    // 最后跳转过去的时候都会丢失 query 信息
-    uni.switchTab({
-      url: path,
-    })
-    // uni.switchTab({
-    //   url: _path,
-    //   query,
-    // })
-  }
-  else {
-    console.log('redirectTo:', path)
-    uni.redirectTo({
-      url: path,
-    })
-  }
+  // let path = redirectUrl.value
+  // if (!path.startsWith('/')) {
+  //   path = `/${path}`
+  // }
+  // const { path: _path, query } = parseUrlToObj(path)
+  // console.log('_path:', _path, 'query:', query, 'path:', path)
+  // console.log('isPageTabbar(_path):', isPageTabbar(_path))
+  // if (isPageTabbar(_path)) {
+  //   // 经过我的测试 switchTab 不能带 query 参数, 不管是放到 url  还是放到 query ,
+  //   // 最后跳转过去的时候都会丢失 query 信息
+  //   uni.switchTab({
+  //     url: path,
+  //   })
+  //   // uni.switchTab({
+  //   //   url: _path,
+  //   //   query,
+  //   // })
+  // }
+  // else {
+  //   console.log('redirectTo:', path)
+  //   uni.redirectTo({
+  //     url: path,
+  //   })
+  // }
 }
 </script>
 
