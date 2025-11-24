@@ -2,10 +2,10 @@ import type { TokenInfo } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue' // 修复：导入 computed
 import { refreshToken as _refreshToken } from '@/api/methods/auth'
-import { isDoubleTokenMode } from '@/utils'
 import { useUserStore } from './user'
 
 // 初始化状态
+export const isDoubleTokenMode = import.meta.env.VITE_AUTH_MODE === 'double'
 const tokenInfoState: TokenInfo = isDoubleTokenMode
   ? {
       accessToken: '',
