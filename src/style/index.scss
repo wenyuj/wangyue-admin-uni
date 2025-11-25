@@ -1,9 +1,12 @@
 // 测试用的 iconfont，可生效
 @import './iconfont.css';
 
-:root,
-page {
-  // 全局主题色
+/**
+sard-ui自定义主题色
+ */
+page,
+.sar-portal {
+  // 全局主题变量及样式
   --text-color: #323232;
   --secondary-text-color: #656565;
   --third-text-color: #989898;
@@ -23,13 +26,8 @@ page {
   background-color: var(--bg-color);
   // 全局圆角
   --border-radius: 16rpx;
-}
 
-/**
-sard-ui自定义主题色
- */
-page,
-.sar-portal {
+  // sard-ui自定义主题
   // # 主题色
   --sar-primary: var(--primary-color);
   --sar-success: var(--success-color);
