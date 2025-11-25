@@ -1,21 +1,48 @@
 // 测试用的 iconfont，可生效
-// @import './iconfont.css';
-
-.test {
-  // 可以通过 @apply 多个样式封装整体样式
-  @apply mt-4 ml-4;
-
-  padding-top: 4px;
-  color: red;
-}
+@import './iconfont.css';
 
 :root,
 page {
-  // 修改按主题色
-  // --wot-color-theme: #37c2bc;
+  // 全局主题色
+  --text-color: #323232;
+  --secondary-text-color: #656565;
+  --third-text-color: #989898;
+  --bg-color: #f5f7fa;
+  --bg-color-rgb: 245, 247, 250;
+  --primary-color: #3b82f6;
+  --primary-color-rgb: 59, 130, 246;
+  --success-color: #22c55e;
+  --warning-color: #eab308;
+  --danger-color: #ef4444;
+  // 全局字体颜色
+  color: var(--text-color);
+  // 全局字体大小
+  font-size: 28rpx;
+  font-family: 'SF Pro Display', Roboto, Noto, Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  // 全局背景颜色
+  background-color: var(--bg-color);
+  // 全局圆角
+  --border-radius: 16rpx;
+}
 
-  // 修改按钮背景色
-  // --wot-button-primary-bg-color: green;
+/**
+sard-ui自定义主题色
+ */
+page,
+.sar-portal {
+  // # 主题色
+  --sar-primary: var(--primary-color);
+  --sar-success: var(--success-color);
+  --sar-warning: var(--warning-color);
+  --sar-danger: var(--danger-color);
+  // 自定义主题色RGB值
+  --sar-primary-rgb: var(--primary-color-rgb);
+  // 自定义圆角
+  --sar-rounded: var(--border-radius);
+  // 自定义导航栏字体颜色
+  --sar-navbar-item-color: var(--text-color);
+  // 自定义强调字体颜色
+  --sar-emphasis-color: var(--text-color);
 }
 
 /*
