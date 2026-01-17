@@ -1,4 +1,4 @@
-# unibest 项目概览
+# wangyue 项目概览
 
 这是一个基于 uniapp + Vue3 + TypeScript + Vite5 + UnoCSS 的跨平台开发框架。
 

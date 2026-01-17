@@ -1,62 +1,32 @@
+// 生成 src/manifest.json 和 src/pages.json
+import fs from 'node:fs'
 import path from 'node:path'
-import process from 'node:process'
-// manifest.config.ts
-import { defineManifestConfig } from '@uni-helper/vite-plugin-uni-manifest'
-import { loadEnv } from 'vite'
+import { fileURLToPath } from 'node:url'
 
-// 手动解析命令行参数获取 mode
-function getMode() {
-  const args = process.argv.slice(2)
-  const modeFlagIndex = args.findIndex(arg => arg === '--mode')
-  return modeFlagIndex !== -1 ? args[modeFlagIndex + 1] : args[0] === 'build' ? 'production' : 'development' // 默认 development
-}
-// 获取环境变量的范例
-const env = loadEnv(getMode(), path.resolve(process.cwd(), 'env'))
-const {
-  VITE_APP_TITLE,
-  VITE_UNI_APPID,
-  VITE_WX_APPID,
-  VITE_APP_PUBLIC_BASE,
-  VITE_FALLBACK_LOCALE,
-} = env
-// console.log('manifest.config.ts env:', env)
+// 获取当前文件的目录路径（替代 CommonJS 中的 __dirname）
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-export default defineManifestConfig({
-  'name': VITE_APP_TITLE,
-  'appid': VITE_UNI_APPID,
+const manifest = {
+  'name': 'unibest',
+  'appid': '__UNI__D1E5001',
   'description': '',
   'versionName': '1.0.0',
   'versionCode': '100',
   'transformPx': false,
-  'locale': VITE_FALLBACK_LOCALE, // 'zh-Hans'
-  'h5': {
-    router: {
-      base: VITE_APP_PUBLIC_BASE,
-    },
-  },
-  /* 5+App特有相关 */
   'app-plus': {
     usingComponents: true,
     nvueStyleCompiler: 'uni-app',
     compilerVersion: 3,
-    compatible: {
-      ignoreVersion: true,
-    },
     splashscreen: {
       alwaysShowBeforeRender: true,
       waiting: true,
       autoclose: true,
       delay: 0,
     },
-    /* 模块配置 */
     modules: {},
-    /* 应用发布信息 */
     distribute: {
-      /* android打包配置 */
       android: {
-        minSdkVersion: 21,
-        targetSdkVersion: 30,
-        abiFilters: ['armeabi-v7a', 'arm64-v8a'],
         permissions: [
           '<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>',
           '<uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>',
@@ -74,12 +44,15 @@ export default defineManifestConfig({
           '<uses-feature android:name="android.hardware.camera"/>',
           '<uses-permission android:name="android.permission.WRITE_SETTINGS"/>',
         ],
+        minSdkVersion: 21,
+        targetSdkVersion: 30,
+        abiFilters: [
+          'armeabi-v7a',
+          'arm64-v8a',
+        ],
       },
-      /* ios打包配置 */
       ios: {},
-      /* SDK配置 */
       sdkConfigs: {},
-      /* 图标配置 */
       icons: {
         android: {
           hdpi: 'static/app/icons/72x72.png',
@@ -113,24 +86,22 @@ export default defineManifestConfig({
         },
       },
     },
+    compatible: {
+      ignoreVersion: true,
+    },
   },
-  /* 快应用特有相关 */
   'quickapp': {},
-  /* 小程序特有相关 */
   'mp-weixin': {
-    appid: VITE_WX_APPID,
+    appid: 'wxa2abb91f64032a2b',
     setting: {
       urlCheck: false,
-      // 是否启用 ES6 转 ES5
       es6: true,
       minified: true,
     },
+    usingComponents: true,
     optimization: {
       subPackages: true,
     },
-    // styleIsolation: 'shared',
-    usingComponents: true,
-    // __usePrivacyCheck__: true,
   },
   'mp-alipay': {
     usingComponents: true,
@@ -149,4 +120,125 @@ export default defineManifestConfig({
     enable: false,
   },
   'vueVersion': '3',
-})
+  'h5': {
+    router: {
+      base: '/',
+    },
+  },
+}
+
+const pages = {
+  globalStyle: {
+    navigationStyle: 'default',
+    navigationBarTitleText: 'unibest',
+    navigationBarBackgroundColor: '#f8f8f8',
+    navigationBarTextStyle: 'black',
+    backgroundColor: '#FFFFFF',
+  },
+  easycom: {
+    autoscan: true,
+    custom: {
+      '^fg-(.*)': '@/components/fg-$1/fg-$1.vue',
+      '^(?!z-paging-refresh|z-paging-load-more)z-paging(.*)': 'z-paging/components/z-paging$1/z-paging$1.vue',
+    },
+  },
+  tabBar: {
+    custom: true,
+    color: '#999999',
+    selectedColor: '#018d71',
+    backgroundColor: '#F8F8F8',
+    borderStyle: 'black',
+    height: '50px',
+    fontSize: '10px',
+    iconWidth: '24px',
+    spacing: '3px',
+    list: [
+      {
+        text: '首页',
+        pagePath: 'pages/index/index',
+      },
+      {
+        text: '关于',
+        pagePath: 'pages/about/about',
+      },
+      {
+        text: '我的',
+        pagePath: 'pages/me/me',
+      },
+    ],
+  },
+  pages: [
+    {
+      path: 'pages/index/index',
+      type: 'home',
+      style: {
+        navigationStyle: 'custom',
+        navigationBarTitleText: '首页',
+      },
+    },
+    {
+      path: 'pages/about/about',
+      type: 'page',
+      style: {
+        navigationBarTitleText: '关于',
+      },
+      excludeLoginPath: false,
+    },
+    {
+      path: 'pages/about/alova',
+      type: 'page',
+      style: {
+        navigationBarTitleText: 'Alova 演示',
+      },
+    },
+    {
+      path: 'pages/login/login',
+      type: 'page',
+      style: {
+        navigationBarTitleText: '登录',
+      },
+    },
+    {
+      path: 'pages/login/register',
+      type: 'page',
+      style: {
+        navigationBarTitleText: '注册',
+      },
+    },
+    {
+      path: 'pages/me/me',
+      type: 'page',
+      style: {
+        navigationBarTitleText: '我的',
+      },
+    },
+  ],
+  subPackages: [
+    {
+      root: 'pages-sub',
+      pages: [
+        {
+          path: 'demo/index',
+          type: 'page',
+          style: {
+            navigationBarTitleText: '分包页面',
+          },
+        },
+      ],
+    },
+  ],
+}
+
+// 使用修复后的 __dirname 来解析文件路径
+const manifestPath = path.resolve(__dirname, '../src/manifest.json')
+const pagesPath = path.resolve(__dirname, '../src/pages.json')
+
+// 确保 src 目录存在
+const srcDir = path.resolve(__dirname, '../src')
+if (!fs.existsSync(srcDir)) {
+  fs.mkdirSync(srcDir, { recursive: true })
+}
+
+// 写入文件
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+fs.writeFileSync(pagesPath, JSON.stringify(pages, null, 2))

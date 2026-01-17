@@ -1,7 +1,7 @@
 {
   "globalStyle": {
     "navigationStyle": "default",
-    "navigationBarTitleText": "unibest",
+    "navigationBarTitleText": "wangyue",
     "navigationBarBackgroundColor": "#f8f8f8",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FFFFFF"
@@ -30,10 +30,6 @@
         "pagePath": "pages/index/index"
       },
       {
-        "text": "%tabbar.about%",
-        "pagePath": "pages/about/about"
-      },
-      {
         "text": "%tabbar.me%",
         "pagePath": "pages/me/me"
       }
@@ -46,35 +42,6 @@
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "%tabbar.home%"
-      }
-    },
-    {
-      "path": "pages/about/about",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "%tabbar.about%"
-      },
-      "excludeLoginPath": false
-    },
-    {
-      "path": "pages/about/alova",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "%alova.title%"
-      }
-    },
-    {
-      "path": "pages/about/i18n",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "%i18n.title%"
-      }
-    },
-    {
-      "path": "pages/about/vue-query",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "Vue Query 演示"
       }
     },
     {

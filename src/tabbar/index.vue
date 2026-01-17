@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// i-carbon-code
 import type { CustomTabBarItem } from './config'
 import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
 import { getI18nText, setTabbarItem } from './i18n'
@@ -93,9 +94,6 @@ onShow(() => {
             </view>
           </view>
           <view v-else class="relative px-3 text-center">
-            <template v-if="item.iconType === 'uniUi'">
-              <uni-icons :type="item.icon" size="20" :color="getColorByIndex(index)" />
-            </template>
             <template v-if="item.iconType === 'uiLib'">
               <!-- TODO: 以下内容请根据选择的UI库自行替换 -->
               <!-- 如：<wd-icon name="home" /> (https://wot-design-uni.cn/component/icon.html) -->
@@ -104,7 +102,7 @@ onShow(() => {
               <wd-icon :name="item.icon" size="20" />
             </template>
             <template v-if="item.iconType === 'unocss' || item.iconType === 'iconfont'">
-              <view :class="item.icon" class="text-20px" />
+              <view :class="tabbarStore.curIdx === index ? item.iconActive || item.icon : item.icon" class="text-20px" />
             </template>
             <template v-if="item.iconType === 'image'">
               <image :src="getImageByIndex(index, item)" mode="scaleToFill" class="h-20px w-20px" />

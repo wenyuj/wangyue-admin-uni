@@ -1,12 +1,13 @@
+import { isMp } from '@uni-helper/uni-env'
 /**
- * by 菲鸽 on 2025-08-19
+ * by wenyuj on 2025-08-19
  * 路由拦截，通常也是登录拦截
  * 黑白名单的配置，请看 config.ts 文件， EXCLUDE_LOGIN_PATH_LIST
  */
 import { useTokenStore } from '@/store/token'
 import { isPageTabbar, tabbarStore } from '@/tabbar/store'
 import { getAllPages, getLastPage, HOME_PAGE, parseUrlToObj } from '@/utils/index'
-import { EXCLUDE_LOGIN_PATH_LIST, isNeedLoginMode, LOGIN_PAGE } from './config'
+import { EXCLUDE_LOGIN_PATH_LIST, isNeedLoginMode, LOGIN_PAGE, LOGIN_PAGE_ENABLE_IN_MP } from './config'
 
 export const FG_LOG_ENABLE = false
 export function judgeIsExcludePath(path: string) {
@@ -45,6 +46,11 @@ export const navigateToInterceptor = {
     // 处理直接进入路由非首页时，tabbarIndex 不正确的问题
     tabbarStore.setAutoCurIdx(path)
 
+    // 小程序里面使用平台自带的登录，则不走下面的逻辑
+    if (isMp && !LOGIN_PAGE_ENABLE_IN_MP) {
+      return true // 明确表示允许路由继续执行
+    }
+
     const tokenStore = useTokenStore()
     FG_LOG_ENABLE && console.log('tokenStore.hasLogin:', tokenStore.hasLogin)
 
@@ -62,17 +68,17 @@ export const navigateToInterceptor = {
         else {
           uni.navigateTo({ url })
         }
-        return true // 明确表示阻止原路由继续执行
+        return false // 明确表示阻止原路由继续执行
       }
     }
     let fullPath = path
 
-    if (myQuery) {
+    if (Object.keys(myQuery).length) {
       fullPath += `?${Object.keys(myQuery).map(key => `${key}=${myQuery[key]}`).join('&')}`
     }
     const redirectUrl = `${LOGIN_PAGE}?redirect=${encodeURIComponent(fullPath)}`
 
-    // #region 1/2 需要登录的情况(白名单策略) ---------------------------
+    // #region 1/2 默认需要登录的情况(白名单策略) ---------------------------
     if (isNeedLoginMode) {
       // 需要登录里面的 EXCLUDE_LOGIN_PATH_LIST 表示白名单，可以直接通过
       if (judgeIsExcludePath(path)) {
@@ -88,27 +94,18 @@ export const navigateToInterceptor = {
         return false // 明确表示阻止原路由继续执行
       }
     }
-    // #endregion 1/2 需要登录的情况(白名单策略) ---------------------------
+    // #endregion 1/2 默认需要登录的情况(白名单策略) ---------------------------
 
-    // #region 2/2 不需要登录的情况(黑名单策略) ---------------------------
+    // #region 2/2 默认不需要登录的情况(黑名单策略) ---------------------------
     else {
       // 不需要登录里面的 EXCLUDE_LOGIN_PATH_LIST 表示黑名单，需要重定向到登录页
       if (judgeIsExcludePath(path)) {
         FG_LOG_ENABLE && console.log('2 isNeedLogin(黑名单策略) redirectUrl:', redirectUrl)
-
-        // 如果当前路由是登录页，那就重定向走
-        const { path, query } = parseUrlToObj(redirectUrl)
-        if (path === LOGIN_PAGE) {
-          console.log('path:', path)
-          console.log('query:', query)
-          uni.navigateTo({ url: query.redirect })
-          return false // 明确表示阻止原路由继续执行
-        }
         uni.navigateTo({ url: redirectUrl })
         return false // 修改为false，阻止原路由继续执行
       }
     }
-    // #endregion 2/2 不需要登录的情况(黑名单策略) ---------------------------
+    // #endregion 2/2 默认不需要登录的情况(黑名单策略) ---------------------------
     return true // 明确表示允许路由继续执行
   },
 }

@@ -1,5 +1,5 @@
 export enum ResultEnum {
-  Success = 0, // 成功
+  Success = 200, // 成功
   Error = 400, // 错误
   Unauthorized = 401, // 未授权
   Forbidden = 403, // 禁止访问（原为forbidden）
