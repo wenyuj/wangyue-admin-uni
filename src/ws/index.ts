@@ -70,6 +70,8 @@ class WsManager {
   private retryCount = 0
   // 主动断开标记：为 true 时不触发重连
   private manualClose = false
+  // 待重连标记：用于断开后再重连，避免重复建连
+  private pendingReconnect = false
   // 当前 topics（用于重连复用）
   private topics = ''
   // 认证与刷新 token 的 store
@@ -148,7 +150,7 @@ class WsManager {
     }
 
     if (this.status === 'open' || this.status === 'connecting')
-      this.reconnect()
+      this.requestReconnect()
   }
 
   // 建立连接（自动处理 token 获取与重连条件）
@@ -171,6 +173,7 @@ class WsManager {
     // 清理手动断开标记，允许后续重连
     this.manualClose = false
     this.clearReconnectTimer()
+    this.status = 'connecting'
 
     const token = await this.resolveToken()
     if (!token) {
@@ -182,8 +185,6 @@ class WsManager {
 
     const wsUrl = buildWsUrl(this.options.url, token, this.topics || undefined)
 
-    this.status = 'connecting'
-
     try {
       // uni.connectSocket 在不同端可能返回 Promise/SocketTask
       const socketTask = await uni.connectSocket({ url: wsUrl })
@@ -192,6 +193,11 @@ class WsManager {
       socketTask.onOpen(() => {
         this.status = 'open'
         this.retryCount = 0
+        this.clearReconnectTimer()
+        if (this.pendingReconnect) {
+          // 连接中被要求重连，则先断开，待 onClose 再重连
+          this.disconnect({ manual: true, resetReconnect: false })
+        }
       })
 
       socketTask.onMessage((res) => {
@@ -215,6 +221,12 @@ class WsManager {
         this.socketTask = null
         if (this.manualClose) {
           this.status = 'closed'
+          if (this.pendingReconnect) {
+            // 手动断开但需要重连（topics 更新等场景）
+            this.pendingReconnect = false
+            this.manualClose = false
+            this.connect()
+          }
           return
         }
         this.status = 'closed'
@@ -235,11 +247,13 @@ class WsManager {
     }
   }
 
-  // 主动断开连接（不会触发自动重连）
-  disconnect(options: { manual?: boolean } = {}) {
-    const { manual = true } = options
+  // 主动断开连接（可选清除待重连状态）
+  disconnect(options: { manual?: boolean, resetReconnect?: boolean } = {}) {
+    const { manual = true, resetReconnect = true } = options
     if (manual)
       this.manualClose = true
+    if (resetReconnect)
+      this.pendingReconnect = false
     this.clearReconnectTimer()
     this.retryCount = 0
     if (this.socketTask) {
@@ -254,9 +268,21 @@ class WsManager {
     this.status = 'closed'
   }
 
-  // 立即重连（先主动断开再连接）
-  private reconnect() {
-    this.disconnect({ manual: true })
+  // 请求重连：等待当前连接关闭后再建新连接，避免重复连接
+  private requestReconnect() {
+    if (!this.pendingReconnect)
+      this.pendingReconnect = true
+
+    if (this.status === 'connecting')
+      return
+
+    if (this.socketTask) {
+      this.disconnect({ manual: true, resetReconnect: false })
+      return
+    }
+
+    this.pendingReconnect = false
+    this.manualClose = false
     this.connect()
   }
 
@@ -304,13 +330,14 @@ class WsManager {
     this.retryCount += 1
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null
-      this.connect()
+      this.requestReconnect()
     }, finalDelay)
   }
 
   // 终止重连并标记为手动断开
   private stopReconnect() {
     this.manualClose = true
+    this.pendingReconnect = false
     this.clearReconnectTimer()
   }
 
