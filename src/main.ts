@@ -4,6 +4,7 @@ import i18n from './locale/index'
 import { routeInterceptor } from './router/interceptor'
 
 import store from './store'
+import { initWebSocket } from './ws'
 import '@/style/index.scss'
 import 'virtual:uno.css'
 
@@ -12,6 +13,7 @@ export function createApp() {
   app.use(store)
   app.use(i18n)
   app.use(routeInterceptor)
+  initWebSocket(store)
 
   return {
     app,
