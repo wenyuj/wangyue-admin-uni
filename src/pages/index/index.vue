@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { LOGIN_PAGE } from '@/router/config'
-import { useThemeStore } from '@/store'
 import { safeAreaInsets } from '@/utils/systemInfo'
 
 defineOptions({
@@ -15,8 +14,6 @@ definePage({
     navigationBarTitleText: '%tabbar.home%',
   },
 })
-
-const themeStore = useThemeStore()
 
 console.log('index/index 首页打印了')
 
@@ -37,14 +34,13 @@ function toLogin() {
       wangyue
     </view>
     <view class="mt-4 text-center">
-      <wd-button type="primary" class="ml-2" @click="themeStore.setThemeVars({ colorTheme: 'red' })">
-        设置主题变量
-      </wd-button>
+      <sar-button type="default">
+        UI组件按钮
+      </sar-button>
     </view>
     <view class="mt-4 text-center">
-      UI组件官网：
-      <text class="text-green-500">
-        https://wot-design-uni.cn
+      UI组件官网：<text class="text-green-500">
+        https://sard.wzt.zone/sard-uniapp-docs/
       </text>
     </view>
     <button class="mt-4 w-40 text-center" @click="toLogin">

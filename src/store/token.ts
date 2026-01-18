@@ -2,20 +2,20 @@ import type { TokenInfo } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue' // 修复：导入 computed
 import { refreshToken as _refreshToken } from '@/api/methods/auth'
-import { isDoubleTokenMode } from '@/utils'
 import { useUserStore } from './user'
 
 // 初始化状态
+export const isDoubleTokenMode = import.meta.env.VITE_AUTH_MODE === 'double'
 const tokenInfoState: TokenInfo = isDoubleTokenMode
   ? {
-      token: '',
-      expireTime: 0,
+      accessToken: '',
+      accessExpireTime: 0,
       refreshToken: '',
       refreshExpireTime: 0,
     }
   : {
-      token: '',
-      expireTime: 0,
+      accessToken: '',
+      accessExpireTime: 0,
     }
 
 export const useTokenStore = defineStore(
@@ -33,14 +33,14 @@ export const useTokenStore = defineStore(
       const now = Date.now()
       if (!isDoubleTokenMode) {
         // 单token模式
-        const accessTokenExpireTime = now + val.expireTime * 1000
-        uni.setStorageSync('accessTokenExpireTime', accessTokenExpireTime)
+        const expireTime = now + val.accessExpireTime * 1000
+        uni.setStorageSync('accessTokenExpireTime', expireTime)
       }
       else {
         // 双token模式
-        const accessTokenExpireTime = now + val.expireTime * 1000
+        const accessExpireTime = now + val.accessExpireTime * 1000
         const refreshExpireTime = now + val.refreshExpireTime * 1000
-        uni.setStorageSync('accessTokenExpireTime', accessTokenExpireTime)
+        uni.setStorageSync('accessTokenExpireTime', accessExpireTime)
         uni.setStorageSync('refreshTokenExpireTime', refreshExpireTime)
       }
       const userStore = useUserStore()
@@ -52,7 +52,7 @@ export const useTokenStore = defineStore(
       uni.removeStorageSync('accessTokenExpireTime')
       uni.removeStorageSync('refreshTokenExpireTime')
       tokenInfo.value = { ...tokenInfoState }
-      uni.removeStorageSync('token')
+      uni.removeStorageSync('accessToken')
       const userStore = useUserStore()
       userStore.clearUserInfo()
     }
@@ -122,7 +122,7 @@ export const useTokenStore = defineStore(
       if (isTokenExpired.value) {
         return ''
       }
-      return tokenInfo.value.token
+      return tokenInfo.value.accessToken
     })
 
     /**
@@ -132,7 +132,7 @@ export const useTokenStore = defineStore(
       if (!tokenInfo.value) {
         return false
       }
-      return !!tokenInfo.value.token
+      return !!tokenInfo.value.accessToken
     })
 
     /**

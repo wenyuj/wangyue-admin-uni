@@ -33,12 +33,6 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     text: '%tabbar.home%',
   },
   {
-    iconPath: 'static/tabbar/example.png',
-    selectedIconPath: 'static/tabbar/exampleHL.png',
-    pagePath: 'pages/about/about',
-    text: '%tabbar.about%',
-  },
-  {
     iconPath: 'static/tabbar/personal.png',
     selectedIconPath: 'static/tabbar/personalHL.png',
     pagePath: 'pages/me/me',
@@ -52,7 +46,7 @@ export type CustomTabBarItemBadge = number | 'dot'
 export interface CustomTabBarItem {
   text: string
   pagePath: string
-  iconType: 'uniUi' | 'uiLib' | 'unocss' | 'iconfont' | 'image' // 不建议用 image 模式，需要配置2张图
+  iconType: 'uiLib' | 'unocss' | 'iconfont' | 'image' // 不建议用 image 模式，需要配置2张图
   icon: any // 其实是 string 类型，这里是为了避免 ts 报错 (tabbar/index.vue 里面 uni-icons 那行)
   iconActive?: string // 只有在 image 模式下才需要，传递的是高亮的图片（PS： 不建议用 image 模式）
   badge?: CustomTabBarItemBadge
@@ -62,31 +56,20 @@ export interface CustomTabBarItem {
 // 如果需要配置鼓包，需要在 'tabbar/store.ts' 里面设置，最后在 `tabbar/index.vue` 里面更改鼓包的图片
 export const customTabbarList: CustomTabBarItem[] = [
   {
-    // text 和 pagePath 可以自己直接写，也可以通过索引从 nativeTabbarList 中获取
     text: '%tabbar.home%',
-    pagePath: 'pages/index/index', // pagePath 是两者的关联点
-    // 本框架内置了 uniapp 官方UI库 （uni-ui)的图标库
-    // 使用方式如：<uni-icons type="home" size="30"/>
-    // 图标列表地址：https://uniapp.dcloud.net.cn/component/uniui/uni-icons.html
-    iconType: 'uniUi',
-    icon: 'home',
-    // badge: 'dot',
-  },
-  {
-    text: '%tabbar.about%',
-    pagePath: 'pages/about/about',
+    pagePath: 'pages/index/index',
     // 注意 unocss 图标需要如下处理：（二选一）
     // 1）在fg-tabbar.vue页面上引入一下并注释掉（见tabbar/index.vue代码第2行）
     // 2）配置到 unocss.config.ts 的 safelist 中
     iconType: 'unocss',
-    icon: 'i-carbon-code',
-    // badge: 10,
+    icon: 'i-carbon-home',
+    // badge: 'dot',
   },
   {
     pagePath: 'pages/me/me',
     text: '%tabbar.me%',
-    iconType: 'uniUi',
-    icon: 'contact',
+    iconType: 'unocss',
+    icon: 'i-carbon-user',
     // badge: 100,
   },
   // 其他类型演示
@@ -156,5 +139,4 @@ const _tabbar: TabBar = {
   list: _tabbarList as unknown as TabBar['list'],
 }
 
-// 0和1 需要显示底部的tabbar的各种配置，以利用缓存
-export const tabBar = tabbarCacheEnable ? _tabbar : {}
+export const tabBar = tabbarCacheEnable ? _tabbar : undefined

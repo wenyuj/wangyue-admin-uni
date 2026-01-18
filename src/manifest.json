@@ -96,7 +96,10 @@
   },
   "mp-alipay": {
     "usingComponents": true,
-    "styleIsolation": "shared"
+    "styleIsolation": "shared",
+    "optimization": {
+      "subPackages": true
+    }
   },
   "mp-baidu": {
     "usingComponents": true
