@@ -8,14 +8,14 @@ import { useUserStore } from './user'
 export const isDoubleTokenMode = import.meta.env.VITE_AUTH_MODE === 'double'
 const tokenInfoState: TokenInfo = isDoubleTokenMode
   ? {
-      accessToken: '',
-      accessExpireTime: 0,
+      token: '',
+      expireTime: 0,
       refreshToken: '',
       refreshExpireTime: 0,
     }
   : {
-      accessToken: '',
-      accessExpireTime: 0,
+      token: '',
+      expireTime: 0,
     }
 
 export const useTokenStore = defineStore(
@@ -33,14 +33,14 @@ export const useTokenStore = defineStore(
       const now = Date.now()
       if (!isDoubleTokenMode) {
         // 单token模式
-        const expireTime = now + val.accessExpireTime * 1000
-        uni.setStorageSync('accessTokenExpireTime', expireTime)
+        const accessTokenExpireTime = now + val.expireTime * 1000
+        uni.setStorageSync('accessTokenExpireTime', accessTokenExpireTime)
       }
       else {
         // 双token模式
-        const accessExpireTime = now + val.accessExpireTime * 1000
+        const accessTokenExpireTime = now + val.expireTime * 1000
         const refreshExpireTime = now + val.refreshExpireTime * 1000
-        uni.setStorageSync('accessTokenExpireTime', accessExpireTime)
+        uni.setStorageSync('accessTokenExpireTime', accessTokenExpireTime)
         uni.setStorageSync('refreshTokenExpireTime', refreshExpireTime)
       }
       const userStore = useUserStore()
@@ -52,7 +52,7 @@ export const useTokenStore = defineStore(
       uni.removeStorageSync('accessTokenExpireTime')
       uni.removeStorageSync('refreshTokenExpireTime')
       tokenInfo.value = { ...tokenInfoState }
-      uni.removeStorageSync('accessToken')
+      uni.removeStorageSync('token')
       const userStore = useUserStore()
       userStore.clearUserInfo()
     }
@@ -122,7 +122,7 @@ export const useTokenStore = defineStore(
       if (isTokenExpired.value) {
         return ''
       }
-      return tokenInfo.value.accessToken
+      return tokenInfo.value.token
     })
 
     /**
@@ -132,7 +132,7 @@ export const useTokenStore = defineStore(
       if (!tokenInfo.value) {
         return false
       }
-      return !!tokenInfo.value.accessToken
+      return !!tokenInfo.value.token
     })
 
     /**
