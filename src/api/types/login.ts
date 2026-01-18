@@ -5,8 +5,8 @@ export type AuthMode = 'single' | 'double'
  * 登录返回的信息，其实就是 token 信息
  */
 export interface TokenInfo {
-  accessToken: string
-  accessExpireTime: number // 访问令牌有效期(秒)
+  token: string
+  expireTime: number // 访问令牌有效期(秒)
   refreshToken?: string
   refreshExpireTime?: number // 刷新令牌有效期(秒)
 }
