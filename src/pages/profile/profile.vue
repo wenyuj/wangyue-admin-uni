@@ -4,11 +4,13 @@ import { storeToRefs } from 'pinia'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
+import { getI18nText } from '@/tabbar/i18n'
 import { useUpload } from '@/utils/uploadFile'
 
 definePage({
   style: {
-    navigationBarTitleText: '我的',
+    navigationStyle: 'custom',
+    navigationBarTitleText: '%tabbar.me%',
   },
 })
 
@@ -17,6 +19,7 @@ userStore.fetchUserInfo()
 const tokenStore = useTokenStore()
 // 使用storeToRefs解构userInfo
 const { userInfo } = storeToRefs(userStore)
+const navTitle = computed(() => getI18nText('%tabbar.me%'))
 
 // #ifndef MP-WEIXIN
 // 上传头像
@@ -41,7 +44,7 @@ async function handleLogin() {
   // #endif
   // #ifndef MP-WEIXIN
   uni.navigateTo({
-    url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/me/me')}`,
+    url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/profile/profile')}`,
   })
   // #endif
 }
@@ -103,6 +106,7 @@ function handleLogout() {
 
 <template>
   <view class="profile-container">
+    <sar-navbar status-bar fixed :title="navTitle" />
     <!-- 用户信息区域 -->
     <view class="user-info-section">
       <!-- #ifdef MP-WEIXIN -->

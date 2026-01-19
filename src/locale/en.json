@@ -1,5 +1,7 @@
 {
   "tabbar.home": "Home",
+  "tabbar.workbench": "Workbench",
+  "tabbar.message": "Messages",
   "tabbar.about": "About",
   "tabbar.me": "Me",
   "i18n.title": "En Title",

@@ -33,9 +33,21 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     text: '%tabbar.home%',
   },
   {
+    iconPath: 'static/tabbar/example.png',
+    selectedIconPath: 'static/tabbar/exampleHL.png',
+    pagePath: 'pages/workbench/workbench',
+    text: '%tabbar.workbench%',
+  },
+  {
+    iconPath: 'static/tabbar/example.png',
+    selectedIconPath: 'static/tabbar/exampleHL.png',
+    pagePath: 'pages/message/message',
+    text: '%tabbar.message%',
+  },
+  {
     iconPath: 'static/tabbar/personal.png',
     selectedIconPath: 'static/tabbar/personalHL.png',
-    pagePath: 'pages/me/me',
+    pagePath: 'pages/profile/profile',
     text: '%tabbar.me%',
   },
 ]
@@ -66,11 +78,23 @@ export const customTabbarList: CustomTabBarItem[] = [
     // badge: 'dot',
   },
   {
-    pagePath: 'pages/me/me',
+    pagePath: 'pages/workbench/workbench',
+    text: '%tabbar.workbench%',
+    iconType: 'unocss',
+    icon: 'i-carbon-dashboard',
+  },
+  {
+    pagePath: 'pages/message/message',
+    text: '%tabbar.message%',
+    iconType: 'unocss',
+    icon: 'i-carbon-notification',
+    // badge: 100,
+  },
+  {
+    pagePath: 'pages/profile/profile',
     text: '%tabbar.me%',
     iconType: 'unocss',
     icon: 'i-carbon-user',
-    // badge: 100,
   },
   // 其他类型演示
   // 1、uiLib

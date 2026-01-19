@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { LOGIN_PAGE } from '@/router/config'
-import { safeAreaInsets } from '@/utils/systemInfo'
+import { getI18nText } from '@/tabbar/i18n'
 
 defineOptions({
   name: 'Home',
@@ -26,27 +26,31 @@ function toLogin() {
     url: LOGIN_PAGE,
   })
 }
+
+const navTitle = computed(() => getI18nText('%tabbar.home%'))
 </script>
 
 <template>
-  <view class="bg-white px-4 pt-2" :style="{ marginTop: `${safeAreaInsets?.top}px` }">
-    <view class="mt-4 text-center text-4xl text-[#d14328]">
-      wangyue
+  <view class="bg-white">
+    <sar-navbar status-bar fixed :title="navTitle" />
+    <view class="px-4 pt-2">
+      <view class="mt-4 text-center text-4xl text-[#d14328]">
+        wangyue
+      </view>
+      <view class="mt-4 text-center">
+        <sar-button type="default">
+          UI组件按钮
+        </sar-button>
+      </view>
+      <view class="mt-4 text-center">
+        UI组件官网：<text class="text-green-500">
+          https://sard.wzt.zone/sard-uniapp-docs/
+        </text>
+      </view>
+      <button class="mt-4 w-40 text-center" @click="toLogin">
+        点击去登录页
+      </button>
+      <view class="h-6" />
     </view>
-    <view class="mt-4 text-center">
-      <sar-button type="default">
-        UI组件按钮
-      </sar-button>
-    </view>
-    <view class="mt-4 text-center">
-      UI组件官网：<text class="text-green-500">
-        https://sard.wzt.zone/sard-uniapp-docs/
-      </text>
-    </view>
-    <button class="mt-4 w-40 text-center" @click="toLogin">
-      点击去登录页
-    </button>
-    <view class="h-6" />
   </view>
-  <tabbar />
 </template>
