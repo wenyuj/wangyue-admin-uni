@@ -25,7 +25,10 @@ const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthenticati
 >({
   assignToken: (method) => {
     const tokenStore = useTokenStore()
-    method.config.headers.Authorization = `Bearer ${tokenStore.validToken}`
+    const token = tokenStore.validToken
+    if (token) {
+      method.config.headers.Authorization = `Bearer ${token}`
+    }
   },
   refreshTokenOnSuccess: {
     isExpired: (response, method) => {
@@ -35,16 +38,15 @@ const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthenticati
     handler: async (response, method) => {
       const tokenStore = useTokenStore()
       // 判断是否为双 token 模式
+      const data = (response as UniNamespace.RequestSuccessCallbackResult).data as IResponse
+      tokenStore.clearTokenInfo()
+      uni.reLaunch({ url: LOGIN_PAGE })
       if (isDoubleTokenMode) {
-        // 双 token 模式，刷新 token
-      }
-      else {
-        // 单 token 模式
-        const data = (response as UniNamespace.RequestSuccessCallbackResult).data as IResponse
-        tokenStore.clearTokenInfo()
-        uni.reLaunch({ url: LOGIN_PAGE })
+        // refreshToken 预留，暂不处理刷新逻辑
         throw new Error(data.msg)
       }
+      // 单 token 模式
+      throw new Error(data.msg)
     },
   },
 })

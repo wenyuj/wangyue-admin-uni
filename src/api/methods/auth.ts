@@ -1,11 +1,11 @@
-import type { IUpdateInfo, IUpdatePassword, TokenInfo, UserInfo } from '../types/login'
+import type { IUpdateInfo, IUpdatePassword, TokenInfo, UserProfileResponse } from '../types/login'
 import { alova } from '@/http/alova'
 
 /**
  * 登录表单
  */
 export interface ILoginForm {
-  username: string
+  userName: string
   password: string
 }
 
@@ -29,7 +29,7 @@ export function refreshToken(refreshToken: string) {
  * 获取用户信息
  */
 export function getUserInfo() {
-  return alova.Get<UserInfo>('/auth/userinfo')
+  return alova.Get<UserProfileResponse>('/system/user/profile')
 }
 
 /**

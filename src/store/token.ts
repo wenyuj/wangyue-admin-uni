@@ -1,29 +1,23 @@
 import type { TokenInfo } from '@/api/types/login'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue' // 修复：导入 computed
-import { refreshToken as _refreshToken } from '@/api/methods/auth'
+import { computed, ref } from 'vue'
 import { useUserStore } from './user'
 
 // 初始化状态
 export const isDoubleTokenMode = import.meta.env.VITE_AUTH_MODE === 'double'
-const tokenInfoState: TokenInfo = isDoubleTokenMode
-  ? {
-      accessToken: '',
-      accessExpireTime: 0,
-      refreshToken: '',
-      refreshExpireTime: 0,
-    }
-  : {
-      accessToken: '',
-      accessExpireTime: 0,
-    }
+const tokenInfoState: TokenInfo = {
+  token: '',
+  expireTime: 0,
+  refreshToken: '',
+  refreshExpireTime: 0,
+}
 
 export const useTokenStore = defineStore(
   'token',
   () => {
     // 定义用户信息
     const tokenInfo = ref<TokenInfo>({ ...tokenInfoState })
-    // 设置用户信息
+    // 设置 token 信息
     const setTokenInfo = (val: TokenInfo) => {
       tokenInfo.value = {
         ...val,
@@ -31,28 +25,19 @@ export const useTokenStore = defineStore(
 
       // 计算并存储过期时间
       const now = Date.now()
-      if (!isDoubleTokenMode) {
-        // 单token模式
-        const expireTime = now + val.accessExpireTime * 1000
-        uni.setStorageSync('accessTokenExpireTime', expireTime)
-      }
-      else {
-        // 双token模式
-        const accessExpireTime = now + val.accessExpireTime * 1000
+      const expireTime = now + val.expireTime * 1000
+      uni.setStorageSync('tokenExpireTime', expireTime)
+      if (val.refreshExpireTime) {
         const refreshExpireTime = now + val.refreshExpireTime * 1000
-        uni.setStorageSync('accessTokenExpireTime', accessExpireTime)
         uni.setStorageSync('refreshTokenExpireTime', refreshExpireTime)
       }
-      const userStore = useUserStore()
-      userStore.refreshUserInfo()
     }
 
     const clearTokenInfo = () => {
       // 清除存储的过期时间
-      uni.removeStorageSync('accessTokenExpireTime')
+      uni.removeStorageSync('tokenExpireTime')
       uni.removeStorageSync('refreshTokenExpireTime')
       tokenInfo.value = { ...tokenInfoState }
-      uni.removeStorageSync('accessToken')
       const userStore = useUserStore()
       userStore.clearUserInfo()
     }
@@ -66,7 +51,7 @@ export const useTokenStore = defineStore(
       }
 
       const now = Date.now()
-      const expireTime = uni.getStorageSync('accessTokenExpireTime')
+      const expireTime = uni.getStorageSync('tokenExpireTime')
 
       if (!expireTime)
         return true
@@ -79,10 +64,8 @@ export const useTokenStore = defineStore(
     const isRefreshTokenExpired = computed(() => {
       if (!isDoubleTokenMode)
         return true
-
       const now = Date.now()
       const refreshExpireTime = uni.getStorageSync('refreshTokenExpireTime')
-
       if (!refreshExpireTime)
         return true
       return now >= refreshExpireTime
@@ -93,23 +76,7 @@ export const useTokenStore = defineStore(
      * @returns 刷新结果
      */
     const refreshToken = async () => {
-      if (!isDoubleTokenMode) {
-        throw new Error('单token模式不支持刷新token')
-      }
-      // 安全检查，确保refreshToken存在
-      if (!tokenInfo.value.refreshToken) {
-        throw new Error('无效的refreshToken')
-      }
-      try {
-        const refreshToken = tokenInfo.value.refreshToken
-        const res = await _refreshToken(refreshToken)
-        setTokenInfo(res)
-        return res
-      }
-      catch (error) {
-        console.error('刷新token失败:', error)
-        throw error
-      }
+      throw new Error('refreshToken 暂未启用')
     }
 
     /**
@@ -122,7 +89,7 @@ export const useTokenStore = defineStore(
       if (isTokenExpired.value) {
         return ''
       }
-      return tokenInfo.value.accessToken
+      return tokenInfo.value.token
     })
 
     /**
@@ -132,7 +99,7 @@ export const useTokenStore = defineStore(
       if (!tokenInfo.value) {
         return false
       }
-      return !!tokenInfo.value.accessToken
+      return !!tokenInfo.value.token
     })
 
     /**
@@ -147,17 +114,11 @@ export const useTokenStore = defineStore(
      * @returns 有效的token或空字符串
      */
     const tryGetValidToken = async (): Promise<string> => {
-      if (!getValidToken.value && isDoubleTokenMode && !isRefreshTokenExpired.value) {
-        try {
-          await refreshToken()
-          return getValidToken.value
-        }
-        catch (error) {
-          console.error('尝试刷新token失败:', error)
-          return ''
-        }
-      }
       return getValidToken.value
+    }
+
+    const logout = () => {
+      clearTokenInfo()
     }
 
     return {
@@ -173,6 +134,7 @@ export const useTokenStore = defineStore(
       tokenInfo,
       setTokenInfo,
       clearTokenInfo,
+      logout,
     }
   },
   {

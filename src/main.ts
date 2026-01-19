@@ -1,5 +1,6 @@
 import { createSSRApp } from 'vue'
 import App from './App.vue'
+import { permissionDirective } from './directives/permission'
 import i18n from './locale/index'
 import { routeInterceptor } from './router/interceptor'
 
@@ -13,6 +14,8 @@ export function createApp() {
   app.use(store)
   app.use(i18n)
   app.use(routeInterceptor)
+  // 权限指令：控制元素显示/隐藏
+  app.directive('permission', permissionDirective)
   initWebSocket(store)
 
   return {

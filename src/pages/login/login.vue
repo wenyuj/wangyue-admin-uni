@@ -1,104 +1,99 @@
 <script lang="ts" setup>
+import { auth } from '@/api/methods/auth'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { tabbarList } from '@/tabbar/config'
-import { ensureDecodeURIComponent } from '@/utils'
+import { isPageTabbar } from '@/tabbar/store'
+import { ensureDecodeURIComponent, parseUrlToObj } from '@/utils'
 
 definePage({
   style: {
+    navigationStyle: 'custom',
     navigationBarTitleText: '登录',
   },
 })
 
 const redirectUrl = ref('')
+const form = reactive({
+  userName: '',
+  password: '',
+})
+const loading = ref(false)
+
 onLoad((options) => {
-  console.log('login options: ', options)
   if (options.redirect) {
     redirectUrl.value = ensureDecodeURIComponent(options.redirect)
   }
   else {
     redirectUrl.value = tabbarList[0].pagePath
   }
-  console.log('redirectUrl.value: ', redirectUrl.value)
 })
 
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
+
 async function doLogin() {
   if (tokenStore.hasLogin) {
     uni.navigateBack()
     return
   }
+  if (!form.userName.trim()) {
+    uni.showToast({ title: '请输入账号', icon: 'none' })
+    return
+  }
+  if (!form.password.trim()) {
+    uni.showToast({ title: '请输入密码', icon: 'none' })
+    return
+  }
   try {
-    // 有的时候后端会用一个接口返回token和用户信息，有的时候会分开2个接口（各有利弊，看业务场景和系统复杂度），这里使用2个接口返回的来模拟
-    // 1/2 调用接口回来后设置token信息
-    // 这里用单token来模拟
-    tokenStore.login({
-      username: 'admin',
-      password: '123456',
+    loading.value = true
+    const tokenInfo = await auth({
+      userName: form.userName.trim(),
+      password: form.password,
     })
-    // tokenStore.setTokenInfo({
-    //   token: '123456',
-    //   expiresIn: 60 * 60 * 24 * 7,
-    // })
-
-    // 2/2 调用接口回来后设置用户信息
-    // const res = await auth({
-    //   username: '菲鸽',
-    //   password: '123456',
-    // })
-    // console.log('接口拿到的登录信息：', res)
-    userStore.setUserInfo({
-      userId: 123456,
-      username: 'abc123456',
-      nickname: '菲鸽',
-      avatar: 'https://oss.laf.run/ukw0y1-site/avatar.jpg',
-    })
-
-    console.log(redirectUrl.value)
+    tokenStore.setTokenInfo(tokenInfo)
+    await userStore.refreshUserInfo()
   }
   catch (error) {
     console.log('登录失败', error)
+    uni.showToast({ title: '登录失败', icon: 'none' })
+    return
   }
-  // let path = redirectUrl.value
-  // if (!path.startsWith('/')) {
-  //   path = `/${path}`
-  // }
-  // const { path: _path, query } = parseUrlToObj(path)
-  // console.log('_path:', _path, 'query:', query, 'path:', path)
-  // console.log('isPageTabbar(_path):', isPageTabbar(_path))
-  // if (isPageTabbar(_path)) {
-  //   // 经过我的测试 switchTab 不能带 query 参数, 不管是放到 url  还是放到 query ,
-  //   // 最后跳转过去的时候都会丢失 query 信息
-  //   uni.switchTab({
-  //     url: path,
-  //   })
-  //   // uni.switchTab({
-  //   //   url: _path,
-  //   //   query,
-  //   // })
-  // }
-  // else {
-  //   console.log('redirectTo:', path)
-  //   uni.redirectTo({
-  //     url: path,
-  //   })
-  // }
+  finally {
+    loading.value = false
+  }
+
+  let path = redirectUrl.value
+  if (!path.startsWith('/')) {
+    path = `/${path}`
+  }
+  const { path: targetPath } = parseUrlToObj(path)
+  if (isPageTabbar(targetPath)) {
+    uni.switchTab({ url: targetPath })
+    return
+  }
+  uni.redirectTo({ url: path })
 }
 </script>
 
 <template>
-  <view class="login">
-    <!-- 本页面是非MP的登录页，主要用于 h5 和 APP -->
-    <view class="text-center">
-      登录页
+  <view class="min-h-screen bg-white">
+    <sar-navbar status-bar fixed title="登录" />
+    <view class="px-4 pt-6">
+      <view class="text-center text-2xl text-gray-900 font-semibold">
+        账号登录
+      </view>
+      <view class="mt-6 space-y-4">
+        <view class="border border-gray-200 rounded-lg px-3 py-2">
+          <input v-model="form.userName" class="w-full text-base" placeholder="请输入账号">
+        </view>
+        <view class="border border-gray-200 rounded-lg px-3 py-2">
+          <input v-model="form.password" class="w-full text-base" placeholder="请输入密码" password>
+        </view>
+      </view>
+      <sar-button class="mt-6 w-full" :loading="loading" @click="doLogin">
+        登录
+      </sar-button>
     </view>
-    <button class="mt-4 w-40 text-center" @click="doLogin">
-      点击模拟登录
-    </button>
   </view>
 </template>
-
-<style lang="scss" scoped>
-//
-</style>

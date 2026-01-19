@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { IUploadSuccessInfo } from '@/api/types/login'
-import { storeToRefs } from 'pinia'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
@@ -15,11 +14,14 @@ definePage({
 })
 
 const userStore = useUserStore()
-userStore.fetchUserInfo()
 const tokenStore = useTokenStore()
-// 使用storeToRefs解构userInfo
-const { userInfo } = storeToRefs(userStore)
 const navTitle = computed(() => getI18nText('%tabbar.me%'))
+
+onShow(() => {
+  if (tokenStore.hasLogin) {
+    userStore.refreshUserInfo()
+  }
+})
 
 // #ifndef MP-WEIXIN
 // 上传头像
@@ -29,7 +31,7 @@ const { run: uploadAvatar } = useUpload<IUploadSuccessInfo>(
   {
     onSuccess: (res) => {
       console.log('h5头像上传成功', res)
-      useUserStore().setUserAvatar(res.url)
+      userStore.setUserAvatar(res.url)
     },
   },
 )
@@ -37,16 +39,9 @@ const { run: uploadAvatar } = useUpload<IUploadSuccessInfo>(
 
 // 微信小程序下登录
 async function handleLogin() {
-  // #ifdef MP-WEIXIN
-  // 微信登录
-  await tokenStore.wxLogin()
-
-  // #endif
-  // #ifndef MP-WEIXIN
   uni.navigateTo({
     url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/profile/profile')}`,
   })
-  // #endif
 }
 
 // #ifdef MP-WEIXIN
@@ -61,7 +56,7 @@ function onChooseAvatar(e: any) {
     {
       onSuccess: (res) => {
         console.log('wx头像上传成功', res)
-        useUserStore().setUserAvatar(res.url)
+        userStore.setUserAvatar(res.url)
       },
     },
     avatarUrl,
@@ -69,13 +64,6 @@ function onChooseAvatar(e: any) {
   run()
 }
 // #endif
-// #ifdef MP-WEIXIN
-// 微信小程序下设置用户名
-function getUserInfo(e: any) {
-  console.log(e.detail)
-}
-// #endif
-
 // 退出登录
 function handleLogout() {
   uni.showModal({
@@ -84,7 +72,7 @@ function handleLogout() {
     success: (res) => {
       if (res.confirm) {
         // 清空用户信息
-        useTokenStore().logout()
+        tokenStore.logout()
         // 执行退出登录逻辑
         uni.showToast({
           title: '退出登录成功',
@@ -111,18 +99,18 @@ function handleLogout() {
     <view class="user-info-section">
       <!-- #ifdef MP-WEIXIN -->
       <button class="avatar-button" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
-        <image :src="userInfo.avatar" mode="scaleToFill" class="h-full w-full" />
+        <image :src="userStore.userInfo.avatar" mode="scaleToFill" class="h-full w-full" />
       </button>
       <!-- #endif -->
       <!-- #ifndef MP-WEIXIN -->
       <view class="avatar-wrapper" @click="uploadAvatar">
-        <image :src="userInfo.avatar" mode="scaleToFill" class="h-full w-full" />
+        <image :src="userStore.userInfo.avatar" mode="scaleToFill" class="h-full w-full" />
       </view>
       <!-- #endif -->
       <view class="user-details">
         <!-- #ifdef MP-WEIXIN -->
         <input
-          v-model="userInfo.username"
+          v-model="userStore.userInfo.nickName"
           type="nickname"
           class="weui-input"
           placeholder="请输入昵称"
@@ -130,17 +118,17 @@ function handleLogout() {
         <!-- #endif -->
         <!-- #ifndef MP-WEIXIN -->
         <view class="username">
-          {{ userInfo.username }}
+          {{ userStore.userInfo.nickName || userStore.userInfo.userName }}
         </view>
         <!-- #endif -->
         <view class="user-id">
-          ID: {{ userInfo.userId }}
+          ID: {{ userStore.userInfo.userId }}
         </view>
       </view>
     </view>
 
     <view class="mt-3 break-all px-3">
-      {{ JSON.stringify(userInfo, null, 2) }}
+      {{ JSON.stringify(userStore.userInfo, null, 2) }}
     </view>
 
     <view class="mt-20 px-3">
