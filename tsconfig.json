@@ -39,7 +39,8 @@
     "src/**/*.tsx",
     "src/**/*.jsx",
     "src/**/*.vue",
-    "src/**/*.json"
+    "src/**/*.json",
+    "src/uni_modules/mp-html/components/mp-html/highlight/prism.min.js"
   ],
   "exclude": ["node_modules", "dist"]
 }

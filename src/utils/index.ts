@@ -160,3 +160,16 @@ export const isDoubleTokenMode = import.meta.env.VITE_AUTH_MODE === 'double'
  * 通常为 /pages/index/index
  */
 export const HOME_PAGE = `/${pages.find(page => page.type === 'home')?.path || pages[0].path}`
+
+/**
+ * 处理返回事件，优先尝试 navigateBack，否则使用 history.back
+ */
+export function handleBack() {
+  const canNavBack = getCurrentPages()
+  if (canNavBack && canNavBack.length > 1) {
+    uni.navigateBack()
+  }
+  else {
+    history.back()
+  }
+}

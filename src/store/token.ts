@@ -1,6 +1,7 @@
 import type { TokenInfo } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { useMessageStore } from './message'
 import { useUserStore } from './user'
 
 // 初始化状态
@@ -40,6 +41,8 @@ export const useTokenStore = defineStore(
       tokenInfo.value = { ...tokenInfoState }
       const userStore = useUserStore()
       userStore.clearUserInfo()
+      const messageStore = useMessageStore()
+      messageStore.clear()
     }
 
     /**
