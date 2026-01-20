@@ -1,3 +1,5 @@
+import { useTokenStore } from '@/store/token'
+
 /**
  * 文件上传钩子函数使用示例
  * @example
@@ -19,7 +21,7 @@
  */
 export const uploadFileUrl = {
   /** 用户头像上传地址 */
-  USER_AVATAR: `${import.meta.env.VITE_SERVER_BASEURL}/user/avatar`,
+  USER_AVATAR: `${import.meta.env.VITE_SERVER_BASEURL}/system/user/profile/avatar`,
 }
 
 /**
@@ -51,6 +53,10 @@ export interface UploadOptions {
   sourceType?: Array<'album' | 'camera'>
   /** 文件大小限制，单位：MB */
   maxSize?: number //
+  /** 文件字段名，默认为 file */
+  fileFieldName?: string
+  /** 额外请求头 */
+  headers?: Record<string, any>
   /** 上传进度回调函数 */
   onProgress?: (progress: number) => void
   /** 上传成功回调函数 */
@@ -72,6 +78,7 @@ export interface UploadOptions {
 export function useUpload<T = string>(url: string, formData: Record<string, any> = {}, options: UploadOptions = {},
   /** 直接传入文件路径，跳过选择器 */
   directFilePath?: string) {
+  const tokenStore = useTokenStore()
   /** 上传中状态 */
   const loading = ref(false)
   /** 上传错误状态 */
@@ -91,6 +98,10 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
     sourceType = ['album', 'camera'],
     /** 文件大小限制（MB） */
     maxSize = 10,
+    /** 文件字段名 */
+    fileFieldName = 'file',
+    /** 额外请求头 */
+    headers = {},
     /** 进度回调 */
     onProgress,
     /** 成功回调 */
@@ -132,6 +143,8 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
         url,
         tempFilePath: directFilePath,
         formData,
+        fileFieldName,
+        headers: buildUploadHeaders(tokenStore.validToken, headers),
         data,
         error,
         loading,
@@ -163,6 +176,8 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
           url,
           tempFilePath: file.tempFilePath,
           formData,
+          fileFieldName,
+          headers: buildUploadHeaders(tokenStore.validToken, headers),
           data,
           error,
           loading,
@@ -197,6 +212,8 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
           url,
           tempFilePath: res.tempFilePaths[0],
           formData,
+          fileFieldName,
+          headers: buildUploadHeaders(tokenStore.validToken, headers),
           data,
           error,
           loading,
@@ -219,6 +236,13 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
   return { loading, error, data, progress, run }
 }
 
+function buildUploadHeaders(token: string, headers: Record<string, any>) {
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...headers,
+  }
+}
+
 /**
  * 文件上传选项接口
  * @template T 上传成功后返回的数据类型
@@ -230,6 +254,10 @@ interface UploadFileOptions<T> {
   tempFilePath: string
   /** 额外的表单数据 */
   formData: Record<string, any>
+  /** 文件字段名 */
+  fileFieldName: string
+  /** 请求头 */
+  headers: Record<string, any>
   /** 上传成功后的响应数据 */
   data: Ref<T | undefined>
   /** 上传错误状态 */
@@ -257,6 +285,8 @@ function uploadFile<T>({
   url,
   tempFilePath,
   formData,
+  fileFieldName,
+  headers,
   data,
   error,
   loading,
@@ -271,9 +301,10 @@ function uploadFile<T>({
     const uploadTask = uni.uploadFile({
       url,
       filePath: tempFilePath,
-      name: 'file', // 文件对应的 key
+      name: fileFieldName,
       formData,
       header: {
+        ...headers,
         // H5环境下不需要手动设置Content-Type，让浏览器自动处理multipart格式
         // #ifndef H5
         'Content-Type': 'multipart/form-data',

@@ -53,3 +53,4 @@ package-lock.json
 openspec/*
 AGENTS.md
 .sandbox-home/
+.codex/*

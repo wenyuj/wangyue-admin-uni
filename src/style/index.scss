@@ -7,34 +7,52 @@ sard-ui自定义主题色
 page,
 .sar-portal {
   // 全局主题变量及样式
-  --text-color: #323232;
-  --secondary-text-color: #656565;
-  --third-text-color: #989898;
-  --bg-color: #f5f7fa;
-  --bg-color-rgb: 245, 247, 250;
-  --primary-color: #3b82f6;
-  --primary-color-rgb: 59, 130, 246;
-  --success-color: #22c55e;
-  --warning-color: #eab308;
-  --danger-color: #ef4444;
+  --text-color: #0f172a;
+  --secondary-text-color: #475569;
+  --third-text-color: #94a3b8;
+  --bg-color: #f6f7fb;
+  --bg-color-rgb: 246, 247, 251;
+
+  --primary-color: #646cff;
+  --primary-color-rgb: 100, 108, 255;
+  --info-color: #2080f0;
+  --info-color-rgb: 32, 128, 240;
+  --success-color: #52c41a;
+  --success-color-rgb: 82, 196, 26;
+  --warning-color: #faad14;
+  --warning-color-rgb: 250, 173, 20;
+  --danger-color: #f5222d;
+  --danger-color-rgb: 245, 34, 45;
+
   // 全局字体颜色
   color: var(--text-color);
   // 全局字体大小
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-family: 'SF Pro Display', Roboto, Noto, Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   // 全局背景颜色
   background-color: var(--bg-color);
   // 全局圆角
-  --border-radius: 16rpx;
+  --border-radius: 20rpx;
 
   // sard-ui自定义主题
   // # 主题色
   --sar-primary: var(--primary-color);
+  --sar-secondary: var(--sar-gray-600);
   --sar-success: var(--success-color);
+  --sar-info: var(--info-color);
   --sar-warning: var(--warning-color);
   --sar-danger: var(--danger-color);
-  // 自定义主题色RGB值
+  --sar-neutral: var(--sar-gray-700);
+
+  // # 主题色 rgb
   --sar-primary-rgb: var(--primary-color-rgb);
+  --sar-secondary-rgb: var(--sar-gray-600-rgb);
+  --sar-success-rgb: var(--success-color-rgb);
+  --sar-info-rgb: var(--info-color-rgb);
+  --sar-warning-rgb: var(--warning-color-rgb);
+  --sar-danger-rgb: var(--danger-color-rgb);
+  --sar-neutral-rgb: var(--sar-gray-700-rgb);
+
   // 自定义圆角
   --sar-rounded: var(--border-radius);
   // 自定义导航栏字体颜色

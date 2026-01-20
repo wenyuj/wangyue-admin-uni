@@ -1,4 +1,4 @@
-import type { IUpdateInfo, IUpdatePassword, TokenInfo, UserProfileResponse } from '../types/login'
+import type { TokenInfo, UserPasswordUpdate, UserProfileResponse, UserProfileUpdate } from '../types/login'
 import { alova } from '@/http/alova'
 
 /**
@@ -40,17 +40,17 @@ export function logout() {
 }
 
 /**
- * 修改用户信息
+ * 修改用户资料
  */
-export function updateInfo(data: IUpdateInfo) {
-  return alova.Post('/user/updateInfo', data)
+export function updateUserProfile(data: UserProfileUpdate) {
+  return alova.Put('/system/user/profile', data)
 }
 
 /**
- * 修改用户密码
+ * 修改用户密码（query 形式）
  */
-export function updateUserPassword(data: IUpdatePassword) {
-  return alova.Post('/user/updatePassword', data)
+export function updateUserPassword(params: UserPasswordUpdate) {
+  return alova.Put('/system/user/profile/updatePwd', {}, { params })
 }
 
 /**

@@ -67,17 +67,17 @@ export interface IUploadSuccessInfo {
 /**
  * 更新用户信息
  */
-export interface IUpdateInfo {
-  id: number
-  name: string
-  sex: string
+export interface UserProfileUpdate {
+  nickName: string
+  sex: UserGender
+  phoneNumber: string
+  email: string
 }
+
 /**
- * 更新用户信息
+ * 修改密码
  */
-export interface IUpdatePassword {
-  id: number
+export interface UserPasswordUpdate {
   oldPassword: string
   newPassword: string
-  confirmPassword: string
 }
