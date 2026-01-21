@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { UserMessage } from '@/api/types/message'
-import DictTag from '@/components/dict-tag.vue'
 
 const props = defineProps<{
   item: UserMessage
@@ -18,57 +17,73 @@ function handleClick() {
 </script>
 
 <template>
-  <view class="message-card" :class="{ 'is-unread': props.item.readFlag === '0' }" @click="handleClick">
-    <view class="item-header">
-      <view class="item-title-row">
-        <text v-if="props.item.readFlag === '0'" class="unread-dot" />
-        <view class="item-title">
-          {{ props.item.title }}
+  <view class="message-row" :class="{ 'is-unread': props.item.readFlag === '0' }" @click="handleClick">
+    <view class="message-icon">
+      <view class="icon i-carbon-notification" />
+    </view>
+    <view class="message-content">
+      <view class="message-title-row">
+        <view class="message-title-wrap">
+          <text class="message-title">{{ props.item.title }}</text>
+          <text v-if="props.item.readFlag === '0'" class="unread-dot" />
         </view>
+        <text class="message-time">{{ props.item.createTime || '-' }}</text>
       </view>
-      <DictTag dict-type="read_status" :value="props.item.readFlag" size="small" />
-    </view>
-    <view v-if="props.preview" class="item-body">
-      {{ props.preview }}
-    </view>
-    <view class="item-footer">
-      <view class="item-time">
-        {{ props.item.createTime || '-' }}
+      <view v-if="props.preview" class="message-preview">
+        {{ props.preview }}
       </view>
     </view>
   </view>
 </template>
 
 <style lang="scss" scoped>
-.message-card {
-  position: relative;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 24rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 12rpx 28rpx rgba(15, 23, 42, 0.06);
-  transition: transform 0.18s ease;
-}
-
-.message-card:active {
-  transform: scale(0.99);
-}
-
-.message-card.is-unread {
-  border-color: rgba(245, 158, 11, 0.2);
-  box-shadow:
-    0 12rpx 28rpx rgba(15, 23, 42, 0.06),
-    inset 0 0 0 2rpx rgba(245, 158, 11, 0.1);
-}
-
-.item-header {
+.message-row {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 12rpx;
+  gap: 24rpx;
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f1f5f9;
+  background: #ffffff;
 }
 
-.item-title-row {
+.message-row:active {
+  background: #f8fafc;
+}
+
+.message-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.message-row.is-unread .message-icon {
+  background: rgba(100, 108, 255, 0.12);
+  color: #646cff;
+}
+
+.icon {
+  font-size: 36rpx;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.message-title-wrap {
   display: flex;
   align-items: center;
   gap: 10rpx;
@@ -76,40 +91,38 @@ function handleClick() {
   min-width: 0;
 }
 
-.item-title {
-  font-size: 30rpx;
+.message-title {
+  font-size: 28rpx;
   font-weight: 700;
-  color: #111827;
-  line-height: 1.4;
+  color: #1e293b;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.message-time {
+  font-size: 20rpx;
+  font-weight: 500;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
 .unread-dot {
-  width: 12rpx;
-  height: 12rpx;
+  width: 10rpx;
+  height: 10rpx;
   border-radius: 999rpx;
-  background: rgba(245, 158, 11, 0.95);
-  box-shadow: 0 0 0 2rpx rgba(245, 158, 11, 0.18);
+  background: #faad14;
+  flex-shrink: 0;
 }
 
-.item-body {
-  margin-top: 12rpx;
-  font-size: 26rpx;
-  color: rgba(15, 23, 42, 0.65);
-  line-height: 1.6;
-}
-
-.item-footer {
-  margin-top: 14rpx;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.item-time {
+.message-preview {
+  margin-top: 8rpx;
   font-size: 24rpx;
-  color: rgba(15, 23, 42, 0.45);
+  color: #64748b;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

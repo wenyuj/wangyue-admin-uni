@@ -139,6 +139,18 @@ const systemList = computed(() => systemPager.list.value)
 const noticeList = computed(() => noticePager.list.value)
 const activePager = computed(() => (currentTab.value === 'system' ? systemPager : noticePager))
 const refreshing = computed(() => activePager.value.refreshing.value)
+const tabItems = computed(() => ([
+  {
+    name: 'system' as MessageTab,
+    label: '系统消息',
+    unread: messageStore.systemUnreadCount > 0,
+  },
+  {
+    name: 'notice' as MessageTab,
+    label: '平台公告',
+    unread: messageStore.noticeUnreadCount > 0,
+  },
+]))
 
 // 系统消息一键已读
 const { loading: systemReadAllLoading, send: sendSystemReadAll } = useRequest(markAllUserMessageRead, {
@@ -270,22 +282,21 @@ onShow(async () => {
     >
       <view class="content">
         <view class="tabs-row">
-          <sar-tabs v-model:current="currentTab" type="line" root-class="message-tabs">
-            <sar-tab name="system">
-              <sar-badge :value="messageStore.systemUnreadCount" :max="99">
-                <view class="tab-label">
-                  系统消息
-                </view>
-              </sar-badge>
-            </sar-tab>
-            <sar-tab name="notice">
-              <sar-badge :value="messageStore.noticeUnreadCount" :max="99">
-                <view class="tab-label">
-                  平台公告
-                </view>
-              </sar-badge>
-            </sar-tab>
-          </sar-tabs>
+          <scroll-view scroll-x class="tabs-scroll">
+            <view class="tabs-track">
+              <view
+                v-for="tab in tabItems"
+                :key="tab.name"
+                class="tab-item"
+                :class="{ 'tab-item--active': currentTab === tab.name }"
+                @click="currentTab = tab.name"
+              >
+                <text class="tab-text">{{ tab.label }}</text>
+                <view v-if="tab.unread" class="tab-dot" />
+                <view v-if="currentTab === tab.name" class="tab-underline" />
+              </view>
+            </view>
+          </scroll-view>
 
           <sar-button
             v-if="currentTab === 'system'"
@@ -355,15 +366,33 @@ onShow(async () => {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background-color: #f7f8fa;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  --message-primary: #646cff;
+  --message-primary-dark: #535bf2;
+  --message-warning: #faad14;
+  --message-text-main: #1e293b;
+  --message-text-sub: #64748b;
+  --message-border: #e2e8f0;
+  --sar-navbar-bg: rgba(255, 255, 255, 0.95);
+  --sar-navbar-title-color: var(--message-text-main);
+  --sar-navbar-item-color: var(--message-text-main);
+  --sar-navbar-title-font-size: 32rpx;
 }
 
 .refresh-wrap {
-  min-height: calc(100vh - 96rpx);
+  min-height: 100vh;
+  background-color: #ffffff;
 }
 
 .content {
-  padding: 12rpx 24rpx 32rpx;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+:deep(.sar-navbar__fixation) {
+  backdrop-filter: blur(16rpx);
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.8);
 }
 
 .tabs-row {
@@ -373,40 +402,71 @@ onShow(async () => {
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
-  padding: 12rpx 0;
-  background-color: #f7f8fa;
+  gap: 16rpx;
+  padding: 0 32rpx;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.8);
+  backdrop-filter: blur(16rpx);
 }
 
-.tab-label {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #1f2937;
-  padding: 8rpx 0;
-}
-
-:deep(.message-tabs) {
+.tabs-scroll {
   flex: 1;
-  --sar-tabs-tab-height: 80rpx;
-  --sar-tabs-tab-padding-x: 20rpx;
-  --sar-tabs-tab-font-size: 28rpx;
-  --sar-tabs-tab-color: rgba(15, 23, 42, 0.55);
-  --sar-tabs-tab-active-color: rgba(15, 23, 42, 0.9);
-  --sar-tabs-line-height: 4rpx;
-  --sar-tabs-line-bg: var(--sar-primary, #018d71);
+  white-space: nowrap;
+}
+
+.tabs-track {
+  display: flex;
+  align-items: center;
+  gap: 48rpx;
+}
+
+.tab-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--message-text-sub);
+}
+
+.tab-item--active {
+  color: var(--message-primary);
+  font-weight: 600;
+}
+
+.tab-text {
+  line-height: 1.2;
+}
+
+.tab-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 999rpx;
+  background: var(--message-warning);
+}
+
+.tab-underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4rpx;
+  border-radius: 999rpx;
+  background: var(--message-primary);
 }
 
 :deep(.read-all-btn) {
   margin-left: auto;
   font-weight: 600;
+  color: var(--message-primary);
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: 0;
 }
 
 .empty {
