@@ -2,7 +2,6 @@
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
-import { getI18nText } from '@/tabbar/i18n'
 
 definePage({
   style: {
@@ -13,22 +12,66 @@ definePage({
 
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
-const navTitle = computed(() => getI18nText('%tabbar.me%'))
 const userInfo = computed(() => userStore.userInfo)
 
 const profileLoading = ref(false)
 
+const fallbackProfile = {
+  name: 'Admin User',
+  role: 'Senior Manager',
+  id: '894-2201',
+  avatar:
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuDLZdvNxwVHnetQj-jIRR_bg8GpPLoivQL5dYitM9nhPEpWRSM58Yhj7tO6R7TvZadRkyWJGOYWb2XpQtUzgtvn70d9OiHKPJxEzlFnLXonEfhl4DNjfpA1viEfE9dJ6Hud_CJurknq6mD9qi0ZHXnRmdzEquA5kynBbsfVeGSAyVDH7Lr_kC0ipf-BrToKI91YANKjxX0qCneFlz-JfJqCvsOp-Ast0gEISFJxodeiqY3lgaSrHRXD1CPbAhlDjgS-APSlpEh-YlE',
+}
+
 // 个人资料卡展示字段
-const displayName = computed(() => userInfo.value.nickName || userInfo.value.userName || '-')
-const showUserId = computed(() => userInfo.value.userId > 0)
-const userIdLabel = computed(() => (showUserId.value ? userInfo.value.userId : '-'))
-const roleLabel = computed(() => getRoleLabel(userStore.roles?.[0] ?? userInfo.value.roleList?.[0]))
+const displayName = computed(() => userInfo.value.nickName || userInfo.value.userName || fallbackProfile.name)
+const userIdLabel = computed(() => (userInfo.value.userId > 0 ? String(userInfo.value.userId) : fallbackProfile.id))
+const roleLabel = computed(() => {
+  const label = getRoleLabel(userStore.roles?.[0] ?? userInfo.value.roleList?.[0])
+  return label === '暂无角色' ? fallbackProfile.role : label
+})
+const avatarUrl = computed(() => userInfo.value.avatar || fallbackProfile.avatar)
 
 // 三宫格静态占位数据（后续可替换成接口数据）
 const statCards = [
-  { label: '待处理', value: 12 },
-  { label: '消息', value: 5, alert: true },
-  { label: '报表', value: 8 },
+  {
+    label: '待处理',
+    value: 12,
+    toneRgb: '32, 128, 240',
+    bars: [
+      { height: 40, opacity: 0.4 },
+      { height: 60, opacity: 0.6 },
+      { height: 30, opacity: 0.4 },
+      { height: 80, opacity: 1 },
+      { height: 50, opacity: 0.6 },
+    ],
+  },
+  {
+    label: '消息',
+    value: 5,
+    alert: true,
+    toneRgb: '245, 34, 45',
+    bars: [
+      { height: 20, opacity: 0.3 },
+      { height: 40, opacity: 0.4 },
+      { height: 90, opacity: 1 },
+      { height: 60, opacity: 0.5 },
+      { height: 70, opacity: 0.6 },
+    ],
+  },
+  {
+    label: '报表',
+    value: 8,
+    toneRgb: '16, 185, 129',
+    bars: [
+      { height: 30, opacity: 0.3 },
+      { height: 50, opacity: 0.4 },
+      { height: 40, opacity: 0.3 },
+      { height: 70, opacity: 0.8 },
+      { height: 80, opacity: 1 },
+    ],
+  },
 ]
 
 const profileReady = computed(() => userInfo.value.userId !== -1)
@@ -92,6 +135,28 @@ function navigateWhenReady(url: string) {
 const openEditProfile = () => navigateWhenReady('/pages/profile/edit-profile')
 const openChangePassword = () => navigateWhenReady('/pages/profile/change-password')
 
+function showComingSoon(label: string) {
+  if (profileLoading.value)
+    return
+  uni.showToast({
+    title: `${label}暂未开放`,
+    icon: 'none',
+  })
+}
+
+const accountItems = [
+  { label: '账号安全', icon: 'i-carbon-security', action: openChangePassword },
+  { label: '通知设置', icon: 'i-carbon-notification', action: () => showComingSoon('通知设置') },
+  { label: '语言', icon: 'i-carbon-language', value: 'EN', action: () => showComingSoon('语言') },
+]
+
+const supportItems = [
+  { label: '帮助与支持', icon: 'i-carbon-help', action: () => showComingSoon('帮助与支持') },
+  { label: '关于', icon: 'i-carbon-information', action: () => showComingSoon('关于') },
+]
+
+const versionLabel = 'Version 2.4.0 (Build 3902)'
+
 onShow(() => {
   refreshProfile()
 })
@@ -99,8 +164,7 @@ onShow(() => {
 
 <template>
   <view class="profile-page">
-    <sar-navbar status-bar fixed :title="navTitle" />
-
+    <sar-navbar status-bar fixed title="" />
     <view class="content">
       <view v-if="!tokenStore.hasLogin" class="card login-card">
         <view class="login-title">
@@ -119,73 +183,104 @@ onShow(() => {
 
         <template v-else>
           <!-- 个人资料卡片 -->
-          <view class="card profile-card" @click="openEditProfile">
-            <view class="profile-accent" />
-            <view class="profile-header">
-              <view class="avatar-shell">
-                <image :src="userInfo.avatar" mode="scaleToFill" class="avatar-image" />
-              </view>
-
-              <view class="profile-basic">
-                <view class="display-name">
-                  {{ displayName }}
-                </view>
-                <view class="role-title">
-                  {{ roleLabel }}
-                </view>
-                <view v-if="showUserId" class="profile-meta">
-                  <view class="meta-icon i-carbon-badge" />
-                  <text class="meta-text">ID: {{ userIdLabel }}</text>
+          <view class="profile-section" @click="openEditProfile">
+            <view class="profile-avatar">
+              <view class="avatar-ring">
+                <view class="avatar-inner">
+                  <image :src="avatarUrl" mode="aspectFill" class="avatar-image" />
                 </view>
               </view>
-
-              <view class="profile-edit" @click.stop="openEditProfile">
+              <view class="avatar-edit" @click.stop="openEditProfile">
                 <view class="edit-icon i-carbon-edit" />
               </view>
             </view>
 
-            <view v-if="showRefreshing" class="refreshing-tip">
-              资料更新中...
+            <view class="profile-basic">
+              <view class="display-name">
+                {{ displayName }}
+              </view>
+              <view class="role-title">
+                {{ roleLabel }}
+              </view>
+              <view class="profile-meta">
+                <text class="meta-chip">ID: {{ userIdLabel }}</text>
+                <text class="meta-action" @click.stop="openEditProfile">查看</text>
+              </view>
             </view>
+          </view>
+
+          <view v-if="showRefreshing" class="refreshing-tip">
+            资料更新中...
           </view>
 
           <!-- 三宫格统计 -->
-          <view class="stats-grid">
+          <view class="stats-panel">
             <view
               v-for="item in statCards"
               :key="item.label"
-              class="stat-card"
-              :class="{ 'stat-card--alert': item.alert }"
+              class="stats-item"
+              :class="{ 'stats-item--alert': item.alert }"
+              :style="{ '--tone-rgb': item.toneRgb }"
             >
+              <view class="stat-label">
+                {{ item.label }}
+              </view>
               <view class="stat-value">
                 {{ item.value }}
               </view>
-              <view class="stat-label">
-                {{ item.label }}
+              <view class="stat-sparkline">
+                <view
+                  v-for="(bar, index) in item.bars"
+                  :key="`${item.label}-${index}`"
+                  class="stat-bar"
+                  :style="{ 'height': `${bar.height}%`, '--bar-opacity': bar.opacity }"
+                />
               </view>
             </view>
           </view>
 
-          <!-- 功能列表 -->
-          <sar-list card root-class="function-list">
-            <sar-list-item
-              title="修改密码"
-              root-class="function-item"
-              arrow
-              hover
-              @click="openChangePassword"
+          <view class="section-label">
+            账户
+          </view>
+          <view class="menu-section">
+            <view
+              v-for="item in accountItems"
+              :key="item.label"
+              class="menu-item"
+              hover-class="menu-item--active"
+              @click="item.action"
             >
-              <template #icon>
-                <view class="list-icon list-icon--primary">
-                  <view class="i-carbon-locked" />
-                </view>
-              </template>
-            </sar-list-item>
-          </sar-list>
+              <view class="menu-icon" :class="item.icon" />
+              <text class="menu-title">{{ item.label }}</text>
+              <text v-if="item.value" class="menu-badge">{{ item.value }}</text>
+              <view class="menu-arrow i-carbon-chevron-right" />
+            </view>
+          </view>
+
+          <view class="section-label">
+            支持
+          </view>
+          <view class="menu-section">
+            <view
+              v-for="item in supportItems"
+              :key="item.label"
+              class="menu-item"
+              hover-class="menu-item--active"
+              @click="item.action"
+            >
+              <view class="menu-icon" :class="item.icon" />
+              <text class="menu-title">{{ item.label }}</text>
+              <view class="menu-arrow i-carbon-chevron-right" />
+            </view>
+          </view>
 
           <!-- 退出登录 -->
           <view class="logout-button" @click="handleLogout">
             退出登录
+          </view>
+
+          <view class="version-text">
+            {{ versionLabel }}
           </view>
         </template>
       </template>
@@ -194,33 +289,47 @@ onShow(() => {
 </template>
 
 <style lang="scss" scoped>
-/* 页面基础变量与布局 */
 .profile-page {
   min-height: 100vh;
-  --card-bg: #ffffff;
-  --border: #f1f5f9;
-  --card-shadow: 0 6rpx 12rpx rgba(15, 23, 42, 0.06);
-  --sar-navbar-bg: transparent;
-  --sar-navbar-title-color: var(--text-color);
-  --sar-navbar-item-color: var(--text-color);
-  --sar-navbar-title-font-size: 32rpx;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: var(--profile-bg);
+  color: var(--profile-text-main);
   line-height: 1.5;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  --profile-bg: #f1f5f9;
+  --profile-card: #ffffff;
+  --profile-border: #e2e8f0;
+  --profile-border-soft: rgba(226, 232, 240, 0.5);
+  --profile-text-main: #1e293b;
+  --profile-text-sub: #64748b;
+  --profile-primary: #646cff;
+  --profile-primary-dark: #535bf2;
+  --profile-info: #2080f0;
+  --profile-success: #10b981;
+  --profile-danger: #f5222d;
+  --profile-shadow: 0 10rpx 24rpx rgba(15, 23, 42, 0.06);
+  --sar-navbar-bg: rgba(255, 255, 255, 0.95);
+  --sar-navbar-title-color: var(--profile-text-main);
+  --sar-navbar-item-color: var(--profile-text-main);
+  --sar-navbar-title-font-size: 32rpx;
 }
 
 .content {
-  padding: 24rpx 24rpx calc(32rpx + env(safe-area-inset-bottom));
+  width: 100%;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
-/* 通用卡片容器 */
+:deep(.sar-navbar__fixation) {
+  backdrop-filter: blur(16rpx);
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.8);
+}
+
 .card {
-  background: var(--card-bg);
-  border-radius: 32rpx;
-  padding: 40rpx;
-  border: 1rpx solid var(--border);
-  box-shadow: var(--card-shadow);
-  margin-bottom: 24rpx;
+  background: var(--profile-card);
+  border-radius: 24rpx;
+  padding: 48rpx 32rpx;
+  border: 1rpx solid var(--profile-border);
+  box-shadow: var(--profile-shadow);
+  margin: 32rpx 0 24rpx;
 }
 
 .login-card {
@@ -234,49 +343,88 @@ onShow(() => {
 .login-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--profile-text-main);
 }
 
 :deep(.login-btn) {
   width: 60%;
 }
 
-.profile-header {
+.loading-block {
   display: flex;
-  gap: 32rpx;
   align-items: center;
+  gap: 12rpx;
+  padding: 24rpx 40rpx;
+  color: var(--profile-text-sub);
+}
+
+.loading-text {
+  font-size: 24rpx;
+}
+
+.profile-section {
+  background: var(--profile-card);
+  padding: 48rpx 40rpx;
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+  border-bottom: 1rpx solid var(--profile-border-soft);
+}
+
+.profile-section:active {
+  background: #f8fafc;
+}
+
+.profile-avatar {
   position: relative;
-  z-index: 1;
+  flex-shrink: 0;
 }
 
-.profile-accent {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 160rpx;
-  height: 160rpx;
-  border-bottom-left-radius: 999rpx;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  background: rgba(var(--primary-color-rgb), 0.05);
-  pointer-events: none;
+.avatar-ring {
+  width: 144rpx;
+  height: 144rpx;
+  border-radius: 999rpx;
+  padding: 4rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.06);
 }
 
-.avatar-shell {
-  width: 160rpx;
-  height: 160rpx;
+.avatar-inner {
+  width: 100%;
+  height: 100%;
   border-radius: 999rpx;
   overflow: hidden;
-  border: 4rpx solid #ffffff;
-  background: rgba(148, 163, 184, 0.18);
-  box-shadow: inset 0 0 0 1rpx rgba(15, 23, 42, 0.04);
-  flex-shrink: 0;
+  background: #e2e8f0;
 }
 
 .avatar-image {
   width: 100%;
   height: 100%;
+}
+
+.avatar-edit {
+  position: absolute;
+  right: -6rpx;
+  bottom: -6rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(226, 232, 240, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.08);
+}
+
+.avatar-edit:active {
+  background: #f8fafc;
+}
+
+.edit-icon {
+  font-size: 24rpx;
+  color: var(--profile-primary);
 }
 
 .profile-basic {
@@ -285,9 +433,10 @@ onShow(() => {
 }
 
 .display-name {
-  font-size: 40rpx;
+  font-size: 38rpx;
   font-weight: 700;
-  color: var(--text-color);
+  font-family: 'Playfair Display', serif;
+  color: var(--profile-text-main);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -296,205 +445,200 @@ onShow(() => {
 
 .role-title {
   margin-top: 8rpx;
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--profile-text-sub);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .profile-meta {
-  margin-top: 8rpx;
+  margin-top: 12rpx;
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  font-size: 24rpx;
-  color: var(--third-text-color);
+  gap: 16rpx;
 }
 
-.meta-icon {
-  font-size: 26rpx;
-  color: var(--third-text-color);
+.meta-chip {
+  font-size: 20rpx;
+  font-family: 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1rpx solid #e2e8f0;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
 }
 
-.meta-text {
-  line-height: 1.4;
+.meta-action {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: var(--profile-primary);
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
 }
 
-.profile-edit {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 16rpx;
-  border: 1rpx solid rgba(var(--primary-color-rgb), 0.14);
-  background: rgba(var(--primary-color-rgb), 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.profile-edit:active {
-  background: rgba(var(--primary-color-rgb), 0.16);
-  border-color: rgba(var(--primary-color-rgb), 0.24);
-}
-
-.edit-icon {
-  font-size: 28rpx;
-  color: var(--text-color);
+.meta-action:active {
+  color: var(--profile-primary-dark);
 }
 
 .refreshing-tip {
-  margin-top: 12rpx;
+  margin: 12rpx 40rpx 0;
   font-size: 22rpx;
-  color: var(--third-text-color);
+  color: var(--profile-text-sub);
 }
 
-.profile-card {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  padding: 48rpx;
-}
-
-.profile-card:active {
-  transform: translateY(2rpx);
-}
-
-.loading-block {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  padding: 16rpx 0 24rpx;
-  color: var(--third-text-color);
-}
-
-.loading-text {
-  font-size: 24rpx;
-}
-
-.stats-grid {
+.stats-panel {
+  background: var(--profile-card);
+  border-top: 1rpx solid var(--profile-border-soft);
+  border-bottom: 1rpx solid var(--profile-border-soft);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24rpx;
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
 }
 
-.stat-card {
-  background: var(--card-bg);
-  border-radius: 24rpx;
-  border: 1rpx solid var(--border);
-  padding: 32rpx 16rpx;
+.stats-item {
+  padding: 36rpx 12rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 8rpx;
-  box-shadow: var(--card-shadow);
   position: relative;
-  transition:
-    border-color 0.2s ease,
-    transform 0.2s ease;
-  cursor: pointer;
 }
 
-.stat-card:active {
-  border-color: rgba(var(--primary-color-rgb), 0.3);
-  transform: translateY(2rpx);
+.stats-item:not(:first-child) {
+  border-left: 1rpx solid rgba(226, 232, 240, 0.7);
 }
 
-.stat-value {
-  font-size: 48rpx;
-  font-weight: 700;
-  color: var(--text-color);
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.stat-card--alert::after {
+.stats-item--alert::after {
   content: '';
   position: absolute;
   top: 24rpx;
   right: 24rpx;
-  width: 16rpx;
-  height: 16rpx;
+  width: 12rpx;
+  height: 12rpx;
   border-radius: 50%;
-  background: var(--danger-color);
-  border: 2rpx solid var(--card-bg);
+  background: var(--profile-danger);
+  border: 2rpx solid #ffffff;
 }
 
 .stat-label {
-  font-size: 24rpx;
-  color: var(--third-text-color);
+  font-size: 20rpx;
+  font-weight: 700;
+  color: var(--profile-text-sub);
+  letter-spacing: 4rpx;
+  text-transform: uppercase;
 }
 
-:deep(.function-list) {
-  margin-bottom: 24rpx;
-  --sar-list-border-color: var(--border);
-  --sar-list-card-border-radius: 24rpx;
-  --sar-list-item-padding-x: 32rpx;
-  --sar-list-item-padding-y: 32rpx;
-  --sar-list-item-bg: var(--card-bg);
-  --sar-list-item-active-bg: #f8fafc;
-  --sar-list-item-title-font-size: 28rpx;
-  --sar-list-item-title-line-height: 1.4;
-  --sar-list-item-arrow-font-size: 30rpx;
-  --sar-list-item-arrow-color: var(--third-text-color);
-  --sar-list-item-icon-margin-right: 24rpx;
+.stat-value {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--profile-text-main);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
-:deep(.function-list .sar-list__content) {
-  border-radius: 24rpx;
-  border: 1rpx solid var(--border);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
+.stat-sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 4rpx;
+  height: 36rpx;
+  opacity: 0.8;
 }
 
-:deep(.function-item .sar-list-item__title) {
-  font-weight: 600;
-  color: var(--text-color);
+.stat-bar {
+  width: 6rpx;
+  border-radius: 2rpx;
+  background-color: rgba(var(--tone-rgb), var(--bar-opacity, 1));
 }
 
-.list-icon {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 16rpx;
+.section-label {
+  padding: 24rpx 40rpx 12rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: var(--profile-text-sub);
+  letter-spacing: 4rpx;
+  text-transform: uppercase;
+}
+
+.menu-section {
+  background: var(--profile-card);
+  border-top: 1rpx solid var(--profile-border-soft);
+  border-bottom: 1rpx solid var(--profile-border-soft);
+  margin-bottom: 16rpx;
+}
+
+.menu-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 40rpx;
+  gap: 24rpx;
+  padding: 32rpx 40rpx;
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.6);
 }
 
-.list-icon--primary {
-  background: rgba(var(--primary-color-rgb), 0.12);
-  color: var(--primary-color);
+.menu-item:last-child {
+  border-bottom: none;
 }
 
-:deep(.function-item:active .list-icon--primary) {
-  background: var(--primary-color);
-  color: #ffffff;
+.menu-item--active {
+  background: #f8fafc;
+}
+
+.menu-item--active .menu-icon {
+  color: var(--profile-primary);
+}
+
+.menu-icon {
+  font-size: 44rpx;
+  color: var(--profile-text-sub);
+}
+
+.menu-title {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--profile-text-main);
+}
+
+.menu-badge {
+  font-size: 20rpx;
+  color: var(--profile-text-sub);
+  background: #f8fafc;
+  border: 1rpx solid #e2e8f0;
+  padding: 4rpx 10rpx;
+  border-radius: 8rpx;
+  margin-right: 8rpx;
+}
+
+.menu-arrow {
+  font-size: 32rpx;
+  color: #cbd5e1;
 }
 
 .logout-button {
-  background: var(--card-bg);
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(var(--danger-color-rgb), 0.3);
-  padding: 28rpx 24rpx;
+  background: var(--profile-card);
+  border-top: 1rpx solid var(--profile-border-soft);
+  border-bottom: 1rpx solid var(--profile-border-soft);
+  padding: 32rpx 24rpx;
   text-align: center;
   font-size: 28rpx;
-  font-weight: 700;
-  color: var(--danger-color);
-  box-shadow: var(--card-shadow);
-  cursor: pointer;
+  font-weight: 600;
+  color: var(--profile-danger);
+  margin-top: 16rpx;
 }
 
 .logout-button:active {
-  background: rgba(var(--danger-color-rgb), 0.06);
+  background: #fef2f2;
+}
+
+.version-text {
+  padding: 24rpx 40rpx 40rpx;
+  text-align: center;
+  font-size: 20rpx;
+  color: var(--profile-text-sub);
+  font-family: 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
+  letter-spacing: 4rpx;
+  text-transform: uppercase;
+  opacity: 0.6;
 }
 </style>
