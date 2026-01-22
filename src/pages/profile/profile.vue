@@ -1,42 +1,57 @@
 <script lang="ts" setup>
+import { dialog, toast } from 'sard-uniapp'
+import i18n, { t } from '@/locale'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
+import { setTabbarItem } from '@/tabbar/i18n'
 
 definePage({
+  // 页面配置：自定义导航 + i18n 标题
   style: {
     navigationStyle: 'custom',
     navigationBarTitleText: '%tabbar.me%',
   },
 })
 
+// 用户与 token 状态
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
+// 用户信息响应式引用
 const userInfo = computed(() => userStore.userInfo)
 
+// 页面刷新状态
 const profileLoading = ref(false)
+// 当前语言与语言选择弹层状态
+const currentLocale = ref(uni.getLocale())
+const languageVisible = ref(false)
+const languageValue = ref(currentLocale.value)
 
+// 个人资料兜底（仅用于头像/ID）
 const fallbackProfile = {
-  name: 'Admin User',
-  role: 'Senior Manager',
   id: '894-2201',
   avatar:
     'https://lh3.googleusercontent.com/aida-public/AB6AXuDLZdvNxwVHnetQj-jIRR_bg8GpPLoivQL5dYitM9nhPEpWRSM58Yhj7tO6R7TvZadRkyWJGOYWb2XpQtUzgtvn70d9OiHKPJxEzlFnLXonEfhl4DNjfpA1viEfE9dJ6Hud_CJurknq6mD9qi0ZHXnRmdzEquA5kynBbsfVeGSAyVDH7Lr_kC0ipf-BrToKI91YANKjxX0qCneFlz-JfJqCvsOp-Ast0gEISFJxodeiqY3lgaSrHRXD1CPbAhlDjgS-APSlpEh-YlE',
 }
 
+// 显式依赖 currentLocale，确保文案随语言切换更新
+const fallbackName = computed(() => t('profile.fallback.name', { locale: currentLocale.value }))
+const fallbackRole = computed(() => t('profile.fallback.role', { locale: currentLocale.value }))
+
 // 个人资料卡展示字段
-const displayName = computed(() => userInfo.value.nickName || userInfo.value.userName || fallbackProfile.name)
+const displayName = computed(() => userInfo.value.nickName || userInfo.value.userName || fallbackName.value)
 const userIdLabel = computed(() => (userInfo.value.userId > 0 ? String(userInfo.value.userId) : fallbackProfile.id))
 const roleLabel = computed(() => {
   const label = getRoleLabel(userStore.roles?.[0] ?? userInfo.value.roleList?.[0])
-  return label === '暂无角色' ? fallbackProfile.role : label
+  return label || fallbackRole.value
 })
 const avatarUrl = computed(() => userInfo.value.avatar || fallbackProfile.avatar)
 
 // 三宫格静态占位数据（后续可替换成接口数据）
 const statCards = [
   {
-    label: '待处理',
+    id: 'pending',
+    labelKey: 'profile.stats.pending',
     value: 12,
     toneRgb: '32, 128, 240',
     bars: [
@@ -48,7 +63,8 @@ const statCards = [
     ],
   },
   {
-    label: '消息',
+    id: 'messages',
+    labelKey: 'profile.stats.messages',
     value: 5,
     alert: true,
     toneRgb: '245, 34, 45',
@@ -61,7 +77,8 @@ const statCards = [
     ],
   },
   {
-    label: '报表',
+    id: 'reports',
+    labelKey: 'profile.stats.reports',
     value: 8,
     toneRgb: '16, 185, 129',
     bars: [
@@ -74,22 +91,77 @@ const statCards = [
   },
 ]
 
+// 页面加载展示逻辑
 const profileReady = computed(() => userInfo.value.userId !== -1)
 const showSkeleton = computed(() => profileLoading.value && !profileReady.value)
 const showRefreshing = computed(() => profileLoading.value && profileReady.value)
+// 语言选项与显示文本
+const languageColumns = computed(() => [
+  { label: t('locale.zhHans', { locale: currentLocale.value }), value: 'zh-Hans' },
+  { label: t('locale.en', { locale: currentLocale.value }), value: 'en' },
+])
+const currentLocaleLabel = computed(() => {
+  const locale = currentLocale.value
+  const match = languageColumns.value.find(item => item.value === locale)
+  return match?.label ?? locale
+})
+// 版本信息与展示文案
+const versionInfo = {
+  version: '2.4.0',
+  build: '3902',
+}
+const versionLabel = computed(() => t('profile.version', { ...versionInfo, locale: currentLocale.value }))
 
+// 角色字段标准化（避免空值/异常结构）
 function getRoleLabel(role: unknown) {
   if (!role)
-    return '暂无角色'
+    return ''
   if (typeof role === 'string')
     return role
   const roleRecord = role as Record<string, unknown>
   const roleValue = roleRecord.roleName ?? roleRecord.name ?? roleRecord.roleKey ?? roleRecord.roleId
   if (roleValue === undefined || roleValue === null || roleValue === '')
-    return '暂无角色'
+    return ''
   return String(roleValue)
 }
 
+// 同步系统语言到页面与 i18n
+function syncLocale() {
+  const locale = uni.getLocale()
+  currentLocale.value = locale
+  languageValue.value = locale
+  i18n.global.locale = locale
+}
+
+// 应用语言切换
+function applyLocale(locale: string) {
+  if (!locale)
+    return
+  // 需要同时更新 uni 与 vue-i18n，并刷新 tabbar 文案
+  currentLocale.value = locale
+  languageValue.value = locale
+  uni.setLocale(locale)
+  i18n.global.locale = locale
+  setTabbarItem()
+}
+
+// 打开语言选择弹层
+function openLanguagePicker() {
+  if (profileLoading.value)
+    return
+  languageValue.value = currentLocale.value
+  languageVisible.value = true
+}
+
+// 响应语言选择
+function handleLocaleChange(value: string | string[]) {
+  const nextLocale = Array.isArray(value) ? value[0] : value
+  if (!nextLocale)
+    return
+  applyLocale(nextLocale)
+}
+
+// 刷新用户信息
 async function refreshProfile() {
   if (!tokenStore.hasLogin)
     return
@@ -102,28 +174,28 @@ async function refreshProfile() {
   }
 }
 
+// 前往登录页
 function handleLogin() {
   uni.navigateTo({
     url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/profile/profile')}`,
   })
 }
 
+// 退出登录确认
 function handleLogout() {
-  uni.showModal({
-    title: '提示',
-    content: '确定要退出登录吗？',
-    success: (res) => {
-      if (res.confirm) {
-        tokenStore.logout()
-        uni.showToast({
-          title: '退出登录成功',
-          icon: 'success',
-        })
-      }
+  dialog.confirm({
+    title: t('profile.logout.title'),
+    message: t('profile.logout.confirm'),
+    confirmText: t('profile.action.confirm'),
+    cancelText: t('profile.action.cancel'),
+    onConfirm: () => {
+      tokenStore.logout()
+      toast.success(t('profile.logout.success'))
     },
   })
 }
 
+// 页面可交互时再导航
 function navigateWhenReady(url: string) {
   if (profileLoading.value)
     return
@@ -132,53 +204,58 @@ function navigateWhenReady(url: string) {
   })
 }
 
+// 快捷入口
 const openEditProfile = () => navigateWhenReady('/pages/profile/edit-profile')
 const openChangePassword = () => navigateWhenReady('/pages/profile/change-password')
 
-function showComingSoon(label: string) {
+// 未开放功能提示
+function showComingSoon(labelKey: string) {
   if (profileLoading.value)
     return
-  uni.showToast({
-    title: `${label}暂未开放`,
-    icon: 'none',
-  })
+  const labelText = t(labelKey)
+  toast(t('profile.comingSoon', { label: labelText }))
 }
 
+// 账户相关菜单
 const accountItems = [
-  { label: '账号安全', icon: 'i-carbon-security', action: openChangePassword },
-  { label: '通知设置', icon: 'i-carbon-notification', action: () => showComingSoon('通知设置') },
-  { label: '语言', icon: 'i-carbon-language', value: 'EN', action: () => showComingSoon('语言') },
+  { id: 'security', labelKey: 'profile.menu.accountSecurity', icon: 'i-carbon-security', action: openChangePassword },
+  { id: 'notifications', labelKey: 'profile.menu.notifications', icon: 'i-carbon-notification', action: () => showComingSoon('profile.menu.notifications') },
+  { id: 'language', labelKey: 'profile.menu.language', icon: 'i-carbon-language', action: openLanguagePicker },
 ]
 
+// 支持相关菜单
 const supportItems = [
-  { label: '帮助与支持', icon: 'i-carbon-help', action: () => showComingSoon('帮助与支持') },
-  { label: '关于', icon: 'i-carbon-information', action: () => showComingSoon('关于') },
+  { id: 'help', labelKey: 'profile.menu.help', icon: 'i-carbon-help', action: () => showComingSoon('profile.menu.help') },
+  { id: 'about', labelKey: 'profile.menu.about', icon: 'i-carbon-information', action: () => showComingSoon('profile.menu.about') },
 ]
 
-const versionLabel = 'Version 2.4.0 (Build 3902)'
-
+// 页面显示时同步语言并刷新资料
 onShow(() => {
+  syncLocale()
   refreshProfile()
 })
 </script>
 
 <template>
   <view class="profile-page">
+    <!-- 自定义导航栏 -->
     <sar-navbar status-bar fixed title="" />
     <view class="content">
+      <!-- 未登录状态 -->
       <view v-if="!tokenStore.hasLogin" class="card login-card">
         <view class="login-title">
-          请先登录
+          {{ $t('profile.login.required') }}
         </view>
         <sar-button type="primary" root-class="login-btn" @click="handleLogin">
-          登录
+          {{ $t('profile.login.button') }}
         </sar-button>
       </view>
 
       <template v-else>
+        <!-- 加载骨架 -->
         <view v-if="showSkeleton" class="loading-block">
           <sar-loading type="circular" />
-          <text class="loading-text">正在加载个人信息</text>
+          <text class="loading-text">{{ $t('profile.loading.profile') }}</text>
         </view>
 
         <template v-else>
@@ -203,27 +280,28 @@ onShow(() => {
                 {{ roleLabel }}
               </view>
               <view class="profile-meta">
-                <text class="meta-chip">ID: {{ userIdLabel }}</text>
-                <text class="meta-action" @click.stop="openEditProfile">查看</text>
+                <text class="meta-chip">{{ $t('profile.idLabel') }}: {{ userIdLabel }}</text>
+                <text class="meta-action" @click.stop="openEditProfile">{{ $t('profile.action.view') }}</text>
               </view>
             </view>
           </view>
 
+          <!-- 刷新提示 -->
           <view v-if="showRefreshing" class="refreshing-tip">
-            资料更新中...
+            {{ $t('profile.refreshing.profile') }}
           </view>
 
           <!-- 三宫格统计 -->
           <view class="stats-panel">
             <view
               v-for="item in statCards"
-              :key="item.label"
+              :key="item.id"
               class="stats-item"
               :class="{ 'stats-item--alert': item.alert }"
               :style="{ '--tone-rgb': item.toneRgb }"
             >
               <view class="stat-label">
-                {{ item.label }}
+                {{ $t(item.labelKey) }}
               </view>
               <view class="stat-value">
                 {{ item.value }}
@@ -231,7 +309,7 @@ onShow(() => {
               <view class="stat-sparkline">
                 <view
                   v-for="(bar, index) in item.bars"
-                  :key="`${item.label}-${index}`"
+                  :key="`${item.id}-${index}`"
                   class="stat-bar"
                   :style="{ 'height': `${bar.height}%`, '--bar-opacity': bar.opacity }"
                 />
@@ -239,52 +317,65 @@ onShow(() => {
             </view>
           </view>
 
+          <!-- 账户分组 -->
           <view class="section-label">
-            账户
+            {{ $t('profile.section.account') }}
           </view>
           <view class="menu-section">
             <view
               v-for="item in accountItems"
-              :key="item.label"
+              :key="item.id"
               class="menu-item"
               hover-class="menu-item--active"
               @click="item.action"
             >
               <view class="menu-icon" :class="item.icon" />
-              <text class="menu-title">{{ item.label }}</text>
-              <text v-if="item.value" class="menu-badge">{{ item.value }}</text>
+              <text class="menu-title">{{ $t(item.labelKey) }}</text>
+              <text v-if="item.id === 'language'" class="menu-badge">{{ currentLocaleLabel }}</text>
               <view class="menu-arrow i-carbon-chevron-right" />
             </view>
           </view>
 
+          <!-- 支持分组 -->
           <view class="section-label">
-            支持
+            {{ $t('profile.section.support') }}
           </view>
           <view class="menu-section">
             <view
               v-for="item in supportItems"
-              :key="item.label"
+              :key="item.id"
               class="menu-item"
               hover-class="menu-item--active"
               @click="item.action"
             >
               <view class="menu-icon" :class="item.icon" />
-              <text class="menu-title">{{ item.label }}</text>
+              <text class="menu-title">{{ $t(item.labelKey) }}</text>
               <view class="menu-arrow i-carbon-chevron-right" />
             </view>
           </view>
 
           <!-- 退出登录 -->
           <view class="logout-button" @click="handleLogout">
-            退出登录
+            {{ $t('profile.action.logout') }}
           </view>
 
+          <!-- 版本信息 -->
           <view class="version-text">
             {{ versionLabel }}
           </view>
         </template>
       </template>
     </view>
+
+    <!-- 语言选择弹层 -->
+    <sar-picker-popout
+      v-model:visible="languageVisible"
+      v-model="languageValue"
+      :title="$t('profile.language.title')"
+      :confirm-text="$t('profile.action.confirm')"
+      :columns="languageColumns"
+      @change="handleLocaleChange"
+    />
   </view>
 </template>
 
