@@ -1,25 +1,27 @@
 <script lang="ts" setup>
 import type { UserMessage } from '@/api/types/message'
 import { getUserMessageDetail, markUserMessageRead } from '@/api/methods/message'
+import { t } from '@/locale'
 import { useDictStore, useMessageStore } from '@/store'
 import { handleBack } from '@/utils'
 
 definePage({
   style: {
     navigationStyle: 'custom',
-    navigationBarTitleText: '系统消息详情',
+    navigationBarTitleText: '%message.detail.title%',
   },
 })
 
 const dictStore = useDictStore()
 const messageStore = useMessageStore()
+const currentLocale = ref(uni.getLocale())
 
 // 详情数据与加载状态
 const detail = ref<UserMessage | null>(null)
 const loading = ref(false)
 const messageId = ref<number | string | null>(null)
 
-const navTitle = ref('系统消息详情')
+const navTitle = computed(() => t('message.detail.title', { locale: currentLocale.value }))
 
 // 富文本样式透传给 mp-html，避免内容溢出/样式错乱
 const tagStyle = {
@@ -31,7 +33,7 @@ const tagStyle = {
 }
 
 // 视图字段兜底，确保空数据也能正确展示
-const title = computed(() => detail.value?.title || '系统消息')
+const title = computed(() => detail.value?.title || t('message.detail.fallbackTitle', { locale: currentLocale.value }))
 const content = computed(() => detail.value?.content || '')
 const time = computed(() => detail.value?.createTime || '')
 const readFlagValue = computed(() => detail.value?.readFlag)
@@ -39,7 +41,9 @@ const readLabel = computed(() => {
   const label = dictStore.getDictLabel('read_status', readFlagValue.value)
   if (label)
     return label
-  return readFlagValue.value === '1' ? '已读' : '未读'
+  return readFlagValue.value === '1'
+    ? t('message.read.read', { locale: currentLocale.value })
+    : t('message.read.unread', { locale: currentLocale.value })
 })
 
 // 读取详情后立即标记已读，并刷新角标
@@ -70,6 +74,10 @@ onLoad(async (query) => {
   await dictStore.ensureDicts(['read_status'])
   await loadDetail()
 })
+
+onShow(() => {
+  currentLocale.value = uni.getLocale()
+})
 </script>
 
 <template>
@@ -78,7 +86,7 @@ onLoad(async (query) => {
 
     <view class="content">
       <view v-if="loading" class="loading">
-        加载中...
+        {{ $t('message.detail.loading') }}
       </view>
       <template v-else>
         <view class="detail-header">

@@ -2,6 +2,7 @@
 import type { UserGender } from '@/api/types/login'
 import { toast } from 'sard-uniapp'
 import { updateUserProfile } from '@/api/methods/auth'
+import { t } from '@/locale'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
@@ -11,18 +12,20 @@ import { uploadFileUrl, useUpload } from '@/utils/uploadFile'
 definePage({
   style: {
     navigationStyle: 'custom',
-    navigationBarTitleText: '资料编辑',
+    navigationBarTitleText: '%profile.edit.title%',
   },
 })
 
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
+const currentLocale = ref(uni.getLocale())
 
 const formRef = ref<any>(null)
 const loading = ref(false)
 const saving = ref(false)
 const avatarUploading = ref(false)
 
+const navTitle = computed(() => t('profile.edit.title', { locale: currentLocale.value }))
 const avatarUrl = computed(() => userStore.userInfo.avatar || '')
 
 const form = reactive({
@@ -32,15 +35,20 @@ const form = reactive({
   email: '',
 })
 
-const sexOptions = [
-  { label: '男', value: '0' },
-  { label: '女', value: '1' },
-]
+const sexOptions = computed(() => [
+  { label: t('profile.edit.form.gender.male', { locale: currentLocale.value }), value: '0' },
+  { label: t('profile.edit.form.gender.female', { locale: currentLocale.value }), value: '1' },
+])
 
-const rules = {
-  nickName: [{ required: true, message: '请输入昵称' }],
-  sex: [{ required: true, message: '请选择性别' }],
-}
+const rules = computed(() => ({
+  nickName: [{ required: true, message: t('profile.edit.form.nickname.required', { locale: currentLocale.value }) }],
+  sex: [{ required: true, message: t('profile.edit.form.gender.required', { locale: currentLocale.value }) }],
+}))
+
+const avatarActionText = computed(() => {
+  const key = avatarUploading.value ? 'profile.edit.avatar.uploading' : 'profile.edit.avatar.change'
+  return t(key, { locale: currentLocale.value })
+})
 
 function syncForm() {
   const info = userStore.userInfo
@@ -69,6 +77,10 @@ function handleLogin() {
   })
 }
 
+function syncLocale() {
+  currentLocale.value = uni.getLocale()
+}
+
 async function handleSave() {
   if (saving.value)
     return
@@ -81,7 +93,7 @@ async function handleSave() {
   saving.value = true
   try {
     await updateUserProfile({ ...form })
-    toast.success('保存成功')
+    toast.success(t('profile.edit.save.success'))
     await userStore.refreshUserInfo()
     syncForm()
     uni.navigateBack()
@@ -94,12 +106,12 @@ async function handleSave() {
 const avatarUploadOptions = {
   fileFieldName: 'avatarFile',
   onSuccess: async () => {
-    toast.success('头像更新成功')
+    toast.success(t('profile.edit.avatar.update.success'))
     await userStore.refreshUserInfo()
     syncForm()
   },
   onError: () => {
-    toast.fail('头像上传失败')
+    toast.fail(t('profile.edit.avatar.update.failed'))
   },
   onComplete: () => {
     avatarUploading.value = false
@@ -127,28 +139,29 @@ function onChooseAvatar(e: any) {
 // #endif
 
 onShow(() => {
+  syncLocale()
   refreshProfile()
 })
 </script>
 
 <template>
   <view class="page">
-    <sar-navbar status-bar show-back fixed title="资料编辑" back-text="" @back="handleBack" />
+    <sar-navbar status-bar show-back fixed :title="navTitle" back-text="" @back="handleBack" />
 
     <view class="content">
       <view v-if="!tokenStore.hasLogin" class="login-card">
         <view class="login-title">
-          请先登录
+          {{ $t('profile.login.required') }}
         </view>
         <sar-button type="default" theme="primary" root-class="login-btn" @click="handleLogin">
-          登录
+          {{ $t('profile.login.button') }}
         </sar-button>
       </view>
 
       <template v-else>
         <view v-if="loading" class="loading-block">
           <sar-loading type="circular" />
-          <text class="loading-text">正在加载资料</text>
+          <text class="loading-text">{{ $t('profile.edit.loading') }}</text>
         </view>
 
         <template v-else>
@@ -181,7 +194,7 @@ onShow(() => {
                 :disabled="avatarUploading"
                 @chooseavatar="onChooseAvatar"
               >
-                {{ avatarUploading ? '上传中...' : '更换头像' }}
+                {{ avatarActionText }}
               </button>
               <!-- #endif -->
               <!-- #ifndef MP-WEIXIN -->
@@ -193,17 +206,17 @@ onShow(() => {
                 :loading="avatarUploading"
                 @click="handleAvatarUpload"
               >
-                更换头像
+                {{ avatarActionText }}
               </sar-button>
               <!-- #endif -->
             </view>
             <view class="avatar-tip">
-              用于个人中心展示
+              {{ $t('profile.edit.avatar.tip') }}
             </view>
           </view>
 
           <view class="section-label">
-            基础信息
+            {{ $t('profile.edit.section.basic') }}
           </view>
 
           <view class="form-section">
@@ -216,10 +229,15 @@ onShow(() => {
               content-position="right"
               root-class="form-root"
             >
-              <sar-form-item name="nickName" label="昵称" required root-class="form-item">
-                <sar-input v-model="form.nickName" placeholder="请输入昵称" inlaid root-class="form-input" />
+              <sar-form-item name="nickName" :label="$t('profile.edit.form.nickname.label')" required root-class="form-item">
+                <sar-input
+                  v-model="form.nickName"
+                  :placeholder="$t('profile.edit.form.nickname.placeholder')"
+                  inlaid
+                  root-class="form-input"
+                />
               </sar-form-item>
-              <sar-form-item name="sex" label="性别" required root-class="form-item">
+              <sar-form-item name="sex" :label="$t('profile.edit.form.gender.label')" required root-class="form-item">
                 <sar-radio-group
                   v-model="form.sex"
                   :options="sexOptions"
@@ -227,19 +245,19 @@ onShow(() => {
                   root-class="form-radio-group"
                 />
               </sar-form-item>
-              <sar-form-item name="phoneNumber" label="手机号" root-class="form-item">
+              <sar-form-item name="phoneNumber" :label="$t('profile.edit.form.phone.label')" root-class="form-item">
                 <sar-input
                   v-model="form.phoneNumber"
-                  placeholder="请输入手机号"
+                  :placeholder="$t('profile.edit.form.phone.placeholder')"
                   inputmode="tel"
                   inlaid
                   root-class="form-input"
                 />
               </sar-form-item>
-              <sar-form-item name="email" label="邮箱" root-class="form-item">
+              <sar-form-item name="email" :label="$t('profile.edit.form.email.label')" root-class="form-item">
                 <sar-input
                   v-model="form.email"
-                  placeholder="请输入邮箱"
+                  :placeholder="$t('profile.edit.form.email.placeholder')"
                   inputmode="email"
                   inlaid
                   root-class="form-input"
@@ -249,7 +267,7 @@ onShow(() => {
           </view>
 
           <view class="form-tip">
-            修改后会同步到个人中心
+            {{ $t('profile.edit.form.tip') }}
           </view>
 
           <view class="footer">
@@ -260,7 +278,7 @@ onShow(() => {
               :loading="saving"
               @click="handleSave"
             >
-              保存资料
+              {{ $t('profile.edit.save.button') }}
             </sar-button>
           </view>
         </template>

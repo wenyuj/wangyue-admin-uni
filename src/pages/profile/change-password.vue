@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { toast } from 'sard-uniapp'
 import { updateUserPassword } from '@/api/methods/auth'
+import { t } from '@/locale'
 import { LOGIN_PAGE } from '@/router/config'
 import { useTokenStore } from '@/store/token'
 import { handleBack } from '@/utils'
@@ -8,14 +9,17 @@ import { handleBack } from '@/utils'
 definePage({
   style: {
     navigationStyle: 'custom',
-    navigationBarTitleText: '修改密码',
+    navigationBarTitleText: '%profile.password.title%',
   },
 })
 
 const tokenStore = useTokenStore()
+const currentLocale = ref(uni.getLocale())
 
 const formRef = ref<any>(null)
 const saving = ref(false)
+
+const navTitle = computed(() => t('profile.password.title', { locale: currentLocale.value }))
 
 const form = reactive({
   oldPassword: '',
@@ -23,16 +27,18 @@ const form = reactive({
   confirmPassword: '',
 })
 
-const rules = {
-  oldPassword: [{ required: true, message: '请输入旧密码' }],
-  newPassword: [{ required: true, message: '请输入新密码' }],
+const rules = computed(() => ({
+  oldPassword: [{ required: true, message: t('profile.password.form.old.required', { locale: currentLocale.value }) }],
+  newPassword: [{ required: true, message: t('profile.password.form.new.required', { locale: currentLocale.value }) }],
   confirmPassword: [
-    { required: true, message: '请输入确认密码' },
+    { required: true, message: t('profile.password.form.confirm.required', { locale: currentLocale.value }) },
     {
-      validator: (value: string) => (value === form.newPassword ? true : '两次密码不一致'),
+      validator: (value: string) => (value === form.newPassword
+        ? true
+        : t('profile.password.form.confirm.mismatch', { locale: currentLocale.value })),
     },
   ],
-}
+}))
 
 watch(
   () => form.newPassword,
@@ -47,6 +53,10 @@ function handleLogin() {
   uni.navigateTo({
     url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/profile/change-password')}`,
   })
+}
+
+function syncLocale() {
+  currentLocale.value = uni.getLocale()
 }
 
 function resetForm() {
@@ -68,7 +78,7 @@ async function handleSave() {
   saving.value = true
   try {
     await updateUserPassword({ ...form })
-    toast.success('密码修改成功')
+    toast.success(t('profile.password.save.success'))
     resetForm()
     uni.navigateBack()
   }
@@ -76,29 +86,33 @@ async function handleSave() {
     saving.value = false
   }
 }
+
+onShow(() => {
+  syncLocale()
+})
 </script>
 
 <template>
   <view class="page">
-    <sar-navbar status-bar show-back fixed title="修改密码" back-text="" @back="handleBack" />
+    <sar-navbar status-bar show-back fixed :title="navTitle" back-text="" @back="handleBack" />
 
     <view class="content">
       <view v-if="!tokenStore.hasLogin" class="login-card">
         <view class="login-title">
-          请先登录
+          {{ $t('profile.login.required') }}
         </view>
         <sar-button type="default" theme="primary" root-class="login-btn" @click="handleLogin">
-          登录
+          {{ $t('profile.login.button') }}
         </sar-button>
       </view>
 
       <view v-else class="panel">
         <view class="intro">
           <view class="intro-title">
-            安全设置
+            {{ $t('profile.password.intro.title') }}
           </view>
           <view class="intro-desc">
-            请妥善保管新密码，建议定期更换以保障安全。
+            {{ $t('profile.password.intro.desc') }}
           </view>
         </view>
 
@@ -111,33 +125,33 @@ async function handleSave() {
             direction="horizontal"
             root-class="form-root"
           >
-            <sar-form-item name="oldPassword" label="旧密码" required root-class="form-item">
+            <sar-form-item name="oldPassword" :label="$t('profile.password.form.old.label')" required root-class="form-item">
               <sar-input
                 v-model="form.oldPassword"
                 type="password"
                 show-eye
                 inlaid
-                placeholder="请输入旧密码"
+                :placeholder="$t('profile.password.form.old.placeholder')"
                 root-class="form-input"
               />
             </sar-form-item>
-            <sar-form-item name="newPassword" label="新密码" required root-class="form-item">
+            <sar-form-item name="newPassword" :label="$t('profile.password.form.new.label')" required root-class="form-item">
               <sar-input
                 v-model="form.newPassword"
                 type="password"
                 show-eye
                 inlaid
-                placeholder="请输入新密码"
+                :placeholder="$t('profile.password.form.new.placeholder')"
                 root-class="form-input"
               />
             </sar-form-item>
-            <sar-form-item name="confirmPassword" label="确认密码" required root-class="form-item">
+            <sar-form-item name="confirmPassword" :label="$t('profile.password.form.confirm.label')" required root-class="form-item">
               <sar-input
                 v-model="form.confirmPassword"
                 type="password"
                 show-eye
                 inlaid
-                placeholder="请再次输入新密码"
+                :placeholder="$t('profile.password.form.confirm.placeholder')"
                 root-class="form-input"
               />
             </sar-form-item>
@@ -152,10 +166,10 @@ async function handleSave() {
             :loading="saving"
             @click="handleSave"
           >
-            更新密码
+            {{ $t('profile.password.save.button') }}
           </sar-button>
           <view class="helper-text">
-            如果遇到问题，请联系系统管理员
+            {{ $t('profile.password.helper') }}
           </view>
         </view>
       </view>

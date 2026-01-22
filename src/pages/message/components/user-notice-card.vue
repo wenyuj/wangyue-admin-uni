@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import type { UserNotice } from '@/api/types/message'
+import { t } from '@/locale'
 import { useDictStore } from '@/store'
 
 const props = defineProps<{
   item: UserNotice
+  locale?: string
 }>()
 
 // 统一对外抛出点击事件，列表页负责跳转
@@ -13,7 +15,10 @@ const emit = defineEmits<{
 
 const dictStore = useDictStore()
 const noticePreview = computed(() => {
-  return dictStore.getDictLabel('sys_notice_type', props.item.noticeType) || '公告通知'
+  const label = dictStore.getDictLabel('sys_notice_type', props.item.noticeType)
+  if (label)
+    return label
+  return t('message.noticeDetail.fallbackType', { locale: props.locale })
 })
 
 function handleClick() {

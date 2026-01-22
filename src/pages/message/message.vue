@@ -10,8 +10,8 @@ import {
   markAllNoticeRead,
   markAllUserMessageRead,
 } from '@/api/methods/message'
+import { t } from '@/locale'
 import { useDictStore, useMessageStore } from '@/store'
-import { getI18nText } from '@/tabbar/i18n'
 import UserMessageCard from './components/user-message-card.vue'
 import UserNoticeCard from './components/user-notice-card.vue'
 
@@ -23,7 +23,8 @@ definePage({
 })
 
 // tabbar 标题与字典/角标统一由 store 与 i18n 驱动
-const navTitle = computed(() => getI18nText('%tabbar.message%'))
+const currentLocale = ref(uni.getLocale())
+const navTitle = computed(() => t('tabbar.message', { locale: currentLocale.value }))
 const dictStore = useDictStore()
 const messageStore = useMessageStore()
 
@@ -142,12 +143,12 @@ const refreshing = computed(() => activePager.value.refreshing.value)
 const tabItems = computed(() => ([
   {
     name: 'system' as MessageTab,
-    label: '系统消息',
+    labelKey: 'message.tab.system',
     unread: messageStore.systemUnreadCount > 0,
   },
   {
     name: 'notice' as MessageTab,
-    label: '平台公告',
+    labelKey: 'message.tab.notice',
     unread: messageStore.noticeUnreadCount > 0,
   },
 ]))
@@ -156,22 +157,22 @@ const tabItems = computed(() => ([
 const { loading: systemReadAllLoading, send: sendSystemReadAll } = useRequest(markAllUserMessageRead, {
   immediate: false,
 }).onSuccess(() => {
-  toast.success('系统消息已全部标记为已读')
+  toast.success(t('message.toast.readAll.system.success'))
   messageStore.refreshUnread()
   systemPager.refresh({ scrollToTop: true })
 }).onError(() => {
-  toast.fail('操作失败，请稍后重试')
+  toast.fail(t('message.toast.actionFailed'))
 })
 
 // 平台公告一键已读
 const { loading: noticeReadAllLoading, send: sendNoticeReadAll } = useRequest(markAllNoticeRead, {
   immediate: false,
 }).onSuccess(() => {
-  toast.success('平台公告已全部标记为已读')
+  toast.success(t('message.toast.readAll.notice.success'))
   messageStore.refreshUnread()
   noticePager.refresh({ scrollToTop: true })
 }).onError(() => {
-  toast.fail('操作失败，请稍后重试')
+  toast.fail(t('message.toast.actionFailed'))
 })
 
 // 下拉刷新：仅刷新当前 Tab，避免触发额外请求
@@ -185,10 +186,10 @@ function handleReadAllSystem() {
   if (systemReadAllLoading.value)
     return
   dialog.confirm({
-    title: '提示',
-    message: '确定将系统消息全部标记为已读吗？',
-    confirmText: '确定',
-    cancelText: '取消',
+    title: t('message.dialog.title'),
+    message: t('message.dialog.readAll.system'),
+    confirmText: t('message.action.confirm'),
+    cancelText: t('message.action.cancel'),
     onConfirm: () => sendSystemReadAll(),
   })
 }
@@ -198,10 +199,10 @@ function handleReadAllNotice() {
   if (noticeReadAllLoading.value)
     return
   dialog.confirm({
-    title: '提示',
-    message: '确定将平台公告全部标记为已读吗？',
-    confirmText: '确定',
-    cancelText: '取消',
+    title: t('message.dialog.title'),
+    message: t('message.dialog.readAll.notice'),
+    confirmText: t('message.action.confirm'),
+    cancelText: t('message.action.cancel'),
     onConfirm: () => sendNoticeReadAll(),
   })
 }
@@ -261,6 +262,7 @@ function markListRead(payload: ReadRecord) {
 
 // 页面显示时保证字典与角标同步，并应用返回已读标记
 onShow(async () => {
+  currentLocale.value = uni.getLocale()
   await dictStore.ensureDicts(['read_status', 'sys_notice_type'])
   await messageStore.refreshUnread()
   if (lastRead.value) {
@@ -291,7 +293,7 @@ onShow(async () => {
                 :class="{ 'tab-item--active': currentTab === tab.name }"
                 @click="currentTab = tab.name"
               >
-                <text class="tab-text">{{ tab.label }}</text>
+                <text class="tab-text">{{ $t(tab.labelKey) }}</text>
                 <view v-if="tab.unread" class="tab-dot" />
                 <view v-if="currentTab === tab.name" class="tab-underline" />
               </view>
@@ -307,7 +309,7 @@ onShow(async () => {
             :loading="systemReadAllLoading"
             @click="handleReadAllSystem"
           >
-            全部已读
+            {{ $t('message.action.readAll') }}
           </sar-button>
           <sar-button
             v-else
@@ -318,13 +320,13 @@ onShow(async () => {
             :loading="noticeReadAllLoading"
             @click="handleReadAllNotice"
           >
-            全部已读
+            {{ $t('message.action.readAll') }}
           </sar-button>
         </view>
 
         <view v-show="currentTab === 'system'" class="list">
           <view v-if="!systemPager.loading.value && systemList.length === 0" class="empty">
-            <sar-empty description="暂无系统消息" />
+            <sar-empty :description="$t('message.empty.system')" />
           </view>
           <UserMessageCard
             v-for="item in systemList"
@@ -337,24 +339,33 @@ onShow(async () => {
           <sar-load-more
             v-if="systemList.length > 0"
             :status="systemPager.loadMoreStatus.value"
+            :incomplete-text="$t('message.loadMore.incomplete')"
+            :loading-text="$t('message.loadMore.loading')"
+            :complete-text="$t('message.loadMore.complete')"
+            :error-text="$t('message.loadMore.error')"
             @load-more="systemPager.loadMore"
           />
         </view>
 
         <view v-show="currentTab === 'notice'" class="list">
           <view v-if="!noticePager.loading.value && noticeList.length === 0" class="empty">
-            <sar-empty description="暂无平台公告" />
+            <sar-empty :description="$t('message.empty.notice')" />
           </view>
           <UserNoticeCard
             v-for="item in noticeList"
             :key="item.noticeId"
             :item="item"
+            :locale="currentLocale"
             @click="openNoticeDetail(item)"
           />
 
           <sar-load-more
             v-if="noticeList.length > 0"
             :status="noticePager.loadMoreStatus.value"
+            :incomplete-text="$t('message.loadMore.incomplete')"
+            :loading-text="$t('message.loadMore.loading')"
+            :complete-text="$t('message.loadMore.complete')"
+            :error-text="$t('message.loadMore.error')"
             @load-more="noticePager.loadMore"
           />
         </view>

@@ -1,18 +1,20 @@
 <script lang="ts" setup>
 import type { NoticeDetail, UserNotice } from '@/api/types/message'
 import { getNoticeDetail, markNoticeRead } from '@/api/methods/message'
+import { t } from '@/locale'
 import { useDictStore, useMessageStore } from '@/store'
 import { handleBack } from '@/utils'
 
 definePage({
   style: {
     navigationStyle: 'custom',
-    navigationBarTitleText: '平台公告详情',
+    navigationBarTitleText: '%message.noticeDetail.title%',
   },
 })
 
 const dictStore = useDictStore()
 const messageStore = useMessageStore()
+const currentLocale = ref(uni.getLocale())
 
 // 列表摘要与详情数据分离，优先展示摘要，详情加载后覆盖
 const summary = ref<UserNotice | null>(null)
@@ -20,11 +22,8 @@ const detail = ref<NoticeDetail | null>(null)
 const loading = ref(false)
 const noticeId = ref<number | string | null>(null)
 
-const navTitle = ref('平台公告详情')
-
-const fallbackContent = `
-  <p>暂无公告内容，请稍后查看。</p>
-`
+const navTitle = computed(() => t('message.noticeDetail.title', { locale: currentLocale.value }))
+const fallbackContent = computed(() => `<p>${t('message.noticeDetail.fallbackContent', { locale: currentLocale.value })}</p>`)
 
 // 富文本样式透传给 mp-html，避免内容溢出/样式错乱
 const tagStyle = {
@@ -36,17 +35,20 @@ const tagStyle = {
 }
 
 // 视图字段兜底：标题/时间/标签优先来自详情，缺失则回退摘要
-const title = computed(() => detail.value?.noticeTitle || summary.value?.noticeTitle || '平台公告')
-const content = computed(() => detail.value?.noticeContent || fallbackContent)
+const title = computed(() => detail.value?.noticeTitle || summary.value?.noticeTitle || t('message.noticeDetail.fallbackTitle', { locale: currentLocale.value }))
+const content = computed(() => detail.value?.noticeContent || fallbackContent.value)
 const time = computed(() => detail.value?.createTime || summary.value?.createTime || '')
 const noticeType = computed(() => detail.value?.noticeType || summary.value?.noticeType || '')
 const readFlagValue = computed(() => summary.value?.readFlag)
-const noticeTypeLabel = computed(() => dictStore.getDictLabel('sys_notice_type', noticeType.value) || '公告通知')
+const noticeTypeLabel = computed(() => dictStore.getDictLabel('sys_notice_type', noticeType.value)
+  || t('message.noticeDetail.fallbackType', { locale: currentLocale.value }))
 const readLabel = computed(() => {
   const label = dictStore.getDictLabel('read_status', readFlagValue.value)
   if (label)
     return label
-  return readFlagValue.value === '1' ? '已读' : '未读'
+  return readFlagValue.value === '1'
+    ? t('message.read.read', { locale: currentLocale.value })
+    : t('message.read.unread', { locale: currentLocale.value })
 })
 
 // 详情加载后标记已读，并刷新角标
@@ -78,6 +80,10 @@ onLoad(async (query) => {
   await dictStore.ensureDicts(['read_status', 'sys_notice_type'])
   await loadDetail()
 })
+
+onShow(() => {
+  currentLocale.value = uni.getLocale()
+})
 </script>
 
 <template>
@@ -86,7 +92,7 @@ onLoad(async (query) => {
 
     <view class="content">
       <view v-if="loading" class="loading">
-        加载中...
+        {{ $t('message.detail.loading') }}
       </view>
       <template v-else>
         <view class="detail-header">
