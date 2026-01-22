@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { UserMessage } from '@/api/types/message'
 import { getUserMessageDetail, markUserMessageRead } from '@/api/methods/message'
-import DictTag from '@/components/dict-tag.vue'
 import { useDictStore, useMessageStore } from '@/store'
 import { handleBack } from '@/utils'
 
@@ -26,8 +25,9 @@ const navTitle = ref('系统消息详情')
 const tagStyle = {
   img: 'max-width: 100%; height: auto; display: block;',
   table: 'width: 100%; border-collapse: collapse;',
-  p: 'line-height: 1.7; color: #374151;',
-  a: 'color: #2563eb;',
+  p: 'line-height: 1.7; color: #1e293b; font-size: 16px;',
+  a: 'color: #646cff;',
+  strong: 'font-weight: 600; color: #1e293b;',
 }
 
 // 视图字段兜底，确保空数据也能正确展示
@@ -35,6 +35,12 @@ const title = computed(() => detail.value?.title || '系统消息')
 const content = computed(() => detail.value?.content || '')
 const time = computed(() => detail.value?.createTime || '')
 const readFlagValue = computed(() => detail.value?.readFlag)
+const readLabel = computed(() => {
+  const label = dictStore.getDictLabel('read_status', readFlagValue.value)
+  if (label)
+    return label
+  return readFlagValue.value === '1' ? '已读' : '未读'
+})
 
 // 读取详情后立即标记已读，并刷新角标
 async function loadDetail() {
@@ -68,23 +74,26 @@ onLoad(async (query) => {
 
 <template>
   <view class="page">
-    <sar-navbar status-bar show-back fixed :title="navTitle" @back="handleBack" />
+    <sar-navbar status-bar show-back fixed :title="navTitle" back-text="" @back="handleBack" />
 
     <view class="content">
       <view v-if="loading" class="loading">
         加载中...
       </view>
       <template v-else>
-        <view class="header">
-          <view class="title">
+        <view class="detail-header">
+          <view class="detail-title">
             {{ title }}
           </view>
-          <view class="meta">
-            <DictTag dict-type="read_status" :value="readFlagValue" size="small" />
-            <text class="time">{{ time || '-' }}</text>
+          <view class="detail-meta">
+            <text class="detail-tag" :class="{ 'detail-tag--unread': readFlagValue === '0' }">
+              {{ readLabel }}
+            </text>
+            <text class="detail-time">{{ time || '-' }}</text>
           </view>
         </view>
-        <view class="body">
+        <view class="detail-divider" />
+        <view class="detail-body">
           <mp-html :content="content" :tag-style="tagStyle" />
         </view>
       </template>
@@ -95,49 +104,87 @@ onLoad(async (query) => {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background-color: #f7f8fa;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  --detail-primary: #646cff;
+  --detail-primary-dark: #535bf2;
+  --detail-success: #52c41a;
+  --detail-warning: #faad14;
+  --detail-border: #e2e8f0;
+  --detail-text-sub: #64748b;
+  --sar-navbar-bg: rgba(255, 255, 255, 0.95);
+  --sar-navbar-title-color: #1e293b;
+  --sar-navbar-item-color: #1e293b;
+  --sar-navbar-title-font-size: 32rpx;
 }
 
 .content {
-  padding: 24rpx;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
-.header {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.05);
+:deep(.sar-navbar__fixation) {
+  backdrop-filter: blur(16rpx);
+  border-bottom: 1rpx solid var(--detail-border);
 }
 
-.title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #111827;
-  line-height: 1.4;
+.detail-header {
+  padding: 32rpx 32rpx 24rpx;
 }
 
-.meta {
-  margin-top: 16rpx;
+.detail-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.detail-meta {
+  margin-top: 20rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12rpx;
-  color: #6b7280;
-  font-size: 24rpx;
+  gap: 16rpx;
+  flex-wrap: wrap;
 }
 
-.body {
-  margin-top: 20rpx;
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.05);
+.detail-tag {
+  font-size: 22rpx;
+  font-weight: 500;
+  color: var(--detail-success);
+  background: rgba(82, 196, 26, 0.1);
+  border: 1rpx solid rgba(82, 196, 26, 0.2);
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.detail-tag--unread {
+  color: var(--detail-warning);
+  background: rgba(250, 173, 20, 0.12);
+  border-color: rgba(250, 173, 20, 0.25);
+}
+
+.detail-time {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--detail-text-sub);
+  letter-spacing: 2rpx;
+}
+
+.detail-divider {
+  height: 1rpx;
+  width: 100%;
+  background: var(--detail-border);
+}
+
+.detail-body {
+  padding: 32rpx;
 }
 
 .loading {
   text-align: center;
-  padding: 60rpx 0;
-  color: #9ca3af;
+  padding: 120rpx 0;
+  color: var(--detail-text-sub);
   font-size: 26rpx;
 }
 </style>
