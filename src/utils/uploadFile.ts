@@ -166,8 +166,11 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
       success: (res) => {
         const file = res.tempFiles[0]
         // 检查文件大小是否符合限制
-        if (!checkFileSize(file.size))
+        if (!checkFileSize(file.size)) {
+          loading.value = false
+          onComplete?.()
           return
+        }
 
         // 开始上传
         loading.value = true
@@ -189,9 +192,14 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
         })
       },
       fail: (err) => {
-        console.error('选择媒体文件失败:', err)
-        error.value = true
-        onError?.(err)
+        const isCanceled = typeof err?.errMsg === 'string' && err.errMsg.includes('cancel')
+        if (!isCanceled) {
+          console.error('选择媒体文件失败:', err)
+          error.value = true
+          onError?.(err)
+        }
+        loading.value = false
+        onComplete?.()
       },
     })
     // #endif
@@ -225,9 +233,14 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
         })
       },
       fail: (err) => {
-        console.error('选择图片失败:', err)
-        error.value = true
-        onError?.(err)
+        const isCanceled = typeof err?.errMsg === 'string' && err.errMsg.includes('cancel')
+        if (!isCanceled) {
+          console.error('选择图片失败:', err)
+          error.value = true
+          onError?.(err)
+        }
+        loading.value = false
+        onComplete?.()
       },
     })
     // #endif

@@ -23,7 +23,7 @@ const loading = ref(false)
 const saving = ref(false)
 const avatarUploading = ref(false)
 
-const displayName = computed(() => userStore.userInfo.nickName || userStore.userInfo.userName || '-')
+const avatarUrl = computed(() => userStore.userInfo.avatar || '')
 
 const form = reactive({
   nickName: '',
@@ -133,14 +133,14 @@ onShow(() => {
 
 <template>
   <view class="page">
-    <sar-navbar status-bar show-back fixed title="资料编辑" @back="handleBack" />
+    <sar-navbar status-bar show-back fixed title="资料编辑" back-text="" @back="handleBack" />
 
     <view class="content">
-      <view v-if="!tokenStore.hasLogin" class="card login-card">
+      <view v-if="!tokenStore.hasLogin" class="login-card">
         <view class="login-title">
           请先登录
         </view>
-        <sar-button type="primary" root-class="login-btn" @click="handleLogin">
+        <sar-button type="default" theme="primary" root-class="login-btn" @click="handleLogin">
           登录
         </sar-button>
       </view>
@@ -152,88 +152,111 @@ onShow(() => {
         </view>
 
         <template v-else>
-          <view class="card avatar-card">
-            <view class="section-head">
-              <view class="section-title">
-                头像
+          <view class="avatar-section">
+            <view class="avatar-wrapper">
+              <view class="avatar-frame">
+                <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" class="avatar-image" />
+                <view v-else class="avatar-placeholder i-carbon-user" />
               </view>
-              <view class="section-desc">
-                用于个人中心展示
+              <view class="avatar-edit">
+                <view class="i-carbon-edit" />
               </view>
+              <!-- #ifndef MP-WEIXIN -->
+              <view class="avatar-overlay" @click="handleAvatarUpload" />
+              <!-- #endif -->
+              <!-- #ifdef MP-WEIXIN -->
+              <button
+                class="avatar-overlay"
+                open-type="chooseAvatar"
+                :disabled="avatarUploading"
+                @chooseavatar="onChooseAvatar"
+              />
+              <!-- #endif -->
             </view>
-
-            <view class="avatar-row">
-              <view class="avatar-preview">
-                <image :src="userStore.userInfo.avatar" mode="scaleToFill" class="avatar-image" />
-              </view>
-              <view class="avatar-meta">
-                <view class="avatar-name">
-                  {{ displayName }}
-                </view>
-                <view class="avatar-tip">
-                  建议上传清晰头像
-                </view>
-                <view class="avatar-actions">
-                  <!-- #ifdef MP-WEIXIN -->
-                  <button
-                    class="avatar-upload-btn"
-                    open-type="chooseAvatar"
-                    :disabled="avatarUploading"
-                    @chooseavatar="onChooseAvatar"
-                  >
-                    {{ avatarUploading ? '上传中...' : '更换头像' }}
-                  </button>
-                  <!-- #endif -->
-                  <!-- #ifndef MP-WEIXIN -->
-                  <sar-button
-                    type="primary"
-                    root-class="avatar-upload-root"
-                    :loading="avatarUploading"
-                    @click="handleAvatarUpload"
-                  >
-                    更换头像
-                  </sar-button>
-                  <!-- #endif -->
-                </view>
-              </view>
+            <view class="avatar-actions">
+              <!-- #ifdef MP-WEIXIN -->
+              <button
+                class="avatar-change-btn"
+                open-type="chooseAvatar"
+                :disabled="avatarUploading"
+                @chooseavatar="onChooseAvatar"
+              >
+                {{ avatarUploading ? '上传中...' : '更换头像' }}
+              </button>
+              <!-- #endif -->
+              <!-- #ifndef MP-WEIXIN -->
+              <sar-button
+                type="text"
+                theme="primary"
+                inline
+                root-class="avatar-change-btn"
+                :loading="avatarUploading"
+                @click="handleAvatarUpload"
+              >
+                更换头像
+              </sar-button>
+              <!-- #endif -->
+            </view>
+            <view class="avatar-tip">
+              用于个人中心展示
             </view>
           </view>
 
-          <view class="card">
-            <view class="section-head">
-              <view class="section-title">
-                基础信息
-              </view>
-              <view class="section-desc">
-                修改后会同步到个人中心
-              </view>
-            </view>
+          <view class="section-label">
+            基础信息
+          </view>
 
+          <view class="form-section">
             <sar-form
               ref="formRef"
               :model="form"
               :rules="rules"
-              label-width="140rpx"
-              direction="vertical"
+              label-width="160rpx"
+              direction="horizontal"
+              content-position="right"
               root-class="form-root"
             >
-              <sar-form-item name="nickName" label="昵称" required>
-                <sar-input v-model="form.nickName" placeholder="请输入昵称" clearable />
+              <sar-form-item name="nickName" label="昵称" required root-class="form-item">
+                <sar-input v-model="form.nickName" placeholder="请输入昵称" inlaid root-class="form-input" />
               </sar-form-item>
-              <sar-form-item name="sex" label="性别" required>
-                <sar-radio-group v-model="form.sex" :options="sexOptions" direction="horizontal" />
+              <sar-form-item name="sex" label="性别" required root-class="form-item">
+                <sar-radio-group
+                  v-model="form.sex"
+                  :options="sexOptions"
+                  direction="horizontal"
+                  root-class="form-radio-group"
+                />
               </sar-form-item>
-              <sar-form-item name="phoneNumber" label="手机号">
-                <sar-input v-model="form.phoneNumber" placeholder="请输入手机号" inputmode="tel" clearable />
+              <sar-form-item name="phoneNumber" label="手机号" root-class="form-item">
+                <sar-input
+                  v-model="form.phoneNumber"
+                  placeholder="请输入手机号"
+                  inputmode="tel"
+                  inlaid
+                  root-class="form-input"
+                />
               </sar-form-item>
-              <sar-form-item name="email" label="邮箱">
-                <sar-input v-model="form.email" placeholder="请输入邮箱" inputmode="email" clearable />
+              <sar-form-item name="email" label="邮箱" root-class="form-item">
+                <sar-input
+                  v-model="form.email"
+                  placeholder="请输入邮箱"
+                  inputmode="email"
+                  inlaid
+                  root-class="form-input"
+                />
               </sar-form-item>
             </sar-form>
+          </view>
 
+          <view class="form-tip">
+            修改后会同步到个人中心
+          </view>
+
+          <view class="footer">
             <sar-button
-              type="primary"
-              root-class="section-action"
+              type="default"
+              theme="primary"
+              root-class="save-btn"
               :loading="saving"
               @click="handleSave"
             >
@@ -249,24 +272,34 @@ onShow(() => {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  --card-bg: #ffffff;
-  --border: rgba(var(--primary-color-rgb), 0.12);
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: #f8f9fa;
+  color: #111827;
   line-height: 1.5;
+  font-family: 'Noto Sans SC', 'Inter', sans-serif;
+  --edit-primary: #646cff;
+  --edit-primary-hover: #535bf2;
+  --edit-border: #e5e7eb;
+  --edit-text-main: #111827;
+  --edit-text-sub: #6b7280;
+  --sar-primary: var(--edit-primary);
+  --sar-primary-rgb: 100, 108, 255;
+  --sar-navbar-bg: rgba(255, 255, 255, 0.95);
+  --sar-navbar-title-color: var(--edit-text-main);
+  --sar-navbar-item-color: var(--edit-text-main);
+  --sar-navbar-title-font-size: 32rpx;
 }
 
 .content {
-  padding: 24rpx 24rpx calc(32rpx + env(safe-area-inset-bottom));
+  min-height: calc(100vh - var(--sar-navbar-height) - env(safe-area-inset-top));
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 
-.card {
-  background: var(--card-bg);
-  border-radius: 24rpx;
-  padding: 24rpx;
-  border: 1rpx solid var(--border);
-  box-shadow: 0 16rpx 36rpx rgba(15, 23, 42, 0.08);
-  margin-bottom: 24rpx;
+:deep(.sar-navbar__fixation) {
+  backdrop-filter: blur(16rpx);
+  border-bottom: 1rpx solid var(--edit-border);
 }
 
 .login-card {
@@ -274,58 +307,60 @@ onShow(() => {
   flex-direction: column;
   align-items: center;
   gap: 16rpx;
+  margin: 32rpx;
   padding: 48rpx 24rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid var(--edit-border);
+  background: #ffffff;
 }
 
 .login-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--edit-text-main);
 }
 
 :deep(.login-btn) {
   width: 60%;
 }
 
-:deep(.form-root) {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
-
-.section-head {
-  margin-bottom: 16rpx;
-}
-
-.section-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.section-desc {
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: var(--third-text-color);
-}
-
-.avatar-card {
-  padding-top: 20rpx;
-}
-
-.avatar-row {
+.loading-block {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 12rpx;
+  padding: 40rpx 32rpx;
+  color: var(--edit-text-sub);
 }
 
-.avatar-preview {
-  width: 140rpx;
-  height: 140rpx;
+.loading-text {
+  font-size: 24rpx;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64rpx 32rpx 48rpx;
+  border-bottom: 1rpx solid var(--edit-border);
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 192rpx;
+  height: 192rpx;
+}
+
+.avatar-frame {
+  width: 100%;
+  height: 100%;
   border-radius: 999rpx;
   overflow: hidden;
-  border: 4rpx solid rgba(var(--primary-color-rgb), 0.1);
-  background: var(--card-bg);
+  border: 2rpx solid #f8f9fa;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.06);
 }
 
 .avatar-image {
@@ -333,66 +368,150 @@ onShow(() => {
   height: 100%;
 }
 
-.avatar-meta {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
+.avatar-placeholder {
+  font-size: 64rpx;
+  color: #9ca3af;
 }
 
-.avatar-name {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.avatar-tip {
-  font-size: 22rpx;
-  color: var(--third-text-color);
-}
-
-.avatar-actions {
-  margin-top: 8rpx;
-}
-
-:deep(.avatar-upload-root) {
-  min-width: 200rpx;
-}
-
-.avatar-upload-btn {
-  padding: 8rpx 16rpx;
+.avatar-edit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 44rpx;
+  height: 44rpx;
   border-radius: 999rpx;
-  font-size: 24rpx;
-  background: rgba(var(--primary-color-rgb), 0.12);
-  color: var(--text-color);
+  background: var(--edit-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid #ffffff;
+  color: #ffffff;
+  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.12);
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 999rpx;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.avatar-overlay::after {
   border: none;
 }
 
-.avatar-upload-btn:disabled {
-  opacity: 0.6;
-}
-
-:deep(.section-action) {
+.avatar-actions {
   margin-top: 16rpx;
 }
 
-.loading-block {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  padding: 16rpx 0 24rpx;
-  color: var(--third-text-color);
-}
-
-@media (max-width: 520px) {
-  .avatar-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-.loading-text {
+:deep(.avatar-change-btn) {
+  background: transparent;
+  border: none;
+  padding: 0;
   font-size: 24rpx;
+  font-weight: 500;
+  color: var(--edit-primary);
+}
+
+.avatar-change-btn:active {
+  color: var(--edit-primary-hover);
+}
+
+.avatar-change-btn:disabled {
+  opacity: 0.6;
+}
+
+.avatar-tip {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--edit-text-sub);
+}
+
+.section-label {
+  padding: 24rpx 32rpx;
+  background: rgba(248, 249, 250, 0.7);
+  border-bottom: 1rpx solid var(--edit-border);
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--edit-text-sub);
+  letter-spacing: 2rpx;
+}
+
+.form-section {
+  background: #ffffff;
+  border-bottom: 1rpx solid var(--edit-border);
+}
+
+:deep(.form-root) {
+  --sar-form-item-padding-x: 32rpx;
+  --sar-form-item-padding-y: 28rpx;
+  --sar-form-item-border-color: var(--edit-border);
+  --sar-form-item-label-width: 160rpx;
+  --sar-form-item-label-margin-right: 16rpx;
+  --sar-form-item-label-font-size: 26rpx;
+  --sar-form-item-label-line-height: 1.4;
+  --sar-form-item-star-color: #ef4444;
+  --sar-form-item-star-font-size: 24rpx;
+  --sar-form-item-error-color: #ef4444;
+}
+
+:deep(.form-root .sar-form-item) {
+  background: #ffffff;
+}
+
+:deep(.form-root .sar-form-item:active) {
+  background: #f8f9fa;
+}
+
+:deep(.form-input) {
+  width: 100%;
+  --sar-input-bg: transparent;
+  --sar-input-control-font-size: 28rpx;
+}
+
+:deep(.form-input .sar-input__control) {
+  text-align: right;
+  color: var(--edit-text-main);
+}
+
+:deep(.form-radio-group) {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  --sar-radio-icon-font-size: 36rpx;
+  --sar-radio-icon-color: #d1d5db;
+  --sar-radio-icon-checked-color: var(--edit-primary);
+  --sar-radio-label-margin-left: 12rpx;
+  --sar-radio-group-column-gap: 32rpx;
+}
+
+:deep(.form-radio-group .sar-radio__label) {
+  font-size: 26rpx;
+  color: var(--edit-text-main);
+}
+
+.form-tip {
+  padding: 16rpx 32rpx 0;
+  font-size: 22rpx;
+  color: var(--edit-text-sub);
+  text-align: center;
+}
+
+.footer {
+  margin-top: auto;
+  padding: 32rpx;
+  background: #ffffff;
+}
+
+:deep(.save-btn) {
+  border-radius: 16rpx;
+  font-weight: 600;
+  box-shadow: 0 12rpx 24rpx rgba(100, 108, 255, 0.2);
 }
 </style>

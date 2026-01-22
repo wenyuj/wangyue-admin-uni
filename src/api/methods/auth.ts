@@ -29,7 +29,9 @@ export function refreshToken(refreshToken: string) {
  * 获取用户信息
  */
 export function getUserInfo() {
-  return alova.Get<UserProfileResponse>('/system/user/profile')
+  return alova.Get<UserProfileResponse>('/system/user/profile', {
+    cacheFor: 0,
+  })
 }
 
 /**
