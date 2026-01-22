@@ -31,19 +31,28 @@ export function getTemplateByKey(key: string) {
   console.log('locale:', locale)
 
   const message = messages[locale] // 拿到某个多语言的所有模板（是一个对象)
+  if (!message) {
+    console.warn(`[i18n] Locale ${locale} is not configured, fallback to key.`)
+    return key
+  }
   if (Object.keys(message).includes(key)) {
     return message[key]
   }
 
   try {
     const keyList = key.split('.')
-    return keyList.reduce((pre, cur) => {
-      return pre[cur]
-    }, message)
+    const resolved = keyList.reduce((pre, cur) => {
+      return pre?.[cur]
+    }, message as any)
+    if (typeof resolved === 'string') {
+      return resolved
+    }
+    console.warn(`[i18n] Key ${key} not found, fallback to key.`)
+    return key
   }
   catch (error) {
     console.error(`[i18n] Function getTemplateByKey(), key param ${key} is not existed.`)
-    return ''
+    return key
   }
 }
 
@@ -55,6 +64,9 @@ export function getTemplateByKey(key: string) {
  * @returns
  */
 function formatI18n(template: string, data?: any) {
+  if (!template) {
+    return ''
+  }
   return template.replace(/\{([^}]+)\}/g, (match, key: string) => {
     // console.log( match, key) // => { detail.height }  detail.height
     const arr = key.trim().split('.')
