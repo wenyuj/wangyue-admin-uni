@@ -151,7 +151,7 @@ async function doLogin() {
   display: flex;
   flex-direction: column;
   background-color: #f8fafc;
-  color: #1e293b;
+  color: var(--text-color);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   --sar-navbar-height: 0px;
@@ -171,7 +171,7 @@ async function doLogin() {
 :deep(input:-webkit-autofill:focus),
 :deep(input:-webkit-autofill:active) {
   -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
-  -webkit-text-fill-color: #1e293b !important;
+  -webkit-text-fill-color: var(--text-color) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
@@ -310,7 +310,7 @@ async function doLogin() {
 .form-icon {
   margin-right: 12px;
   font-size: 20px;
-  color: #9ca3af;
+  color: var(--third-text-color);
   transition: color 0.3s ease;
 }
 
@@ -377,6 +377,7 @@ async function doLogin() {
   font-weight: 300;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(156, 163, 175, 0.7);
+  color: var(--third-text-color);
+  opacity: 0.7;
 }
 </style>

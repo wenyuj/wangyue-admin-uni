@@ -378,14 +378,12 @@ onShow(async () => {
 .page {
   min-height: 100vh;
   background-color: #ffffff;
-  color: #1e293b;
+  color: var(--text-color);
   font-family: 'Plus Jakarta Sans', sans-serif;
-  --message-text-main: #1e293b;
-  --message-text-sub: #64748b;
   --message-border: #e2e8f0;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
-  --sar-navbar-title-color: var(--message-text-main);
-  --sar-navbar-item-color: var(--message-text-main);
+  --sar-navbar-title-color: var(--text-color);
+  --sar-navbar-item-color: var(--text-color);
   --sar-navbar-title-font-size: 32rpx;
 }
 
@@ -436,7 +434,7 @@ onShow(async () => {
   padding: 24rpx 0;
   font-size: 28rpx;
   font-weight: 500;
-  color: var(--message-text-sub);
+  color: var(--secondary-text-color);
 }
 
 .tab-item--active {

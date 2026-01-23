@@ -291,16 +291,14 @@ onShow(() => {
 .page {
   min-height: 100vh;
   background-color: #f8f9fa;
-  color: #111827;
+  color: var(--text-color);
   line-height: 1.5;
   font-family: 'Noto Sans SC', 'Inter', sans-serif;
   --edit-primary-hover: #535bf2;
   --edit-border: #e5e7eb;
-  --edit-text-main: #111827;
-  --edit-text-sub: #6b7280;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
-  --sar-navbar-title-color: var(--edit-text-main);
-  --sar-navbar-item-color: var(--edit-text-main);
+  --sar-navbar-title-color: var(--text-color);
+  --sar-navbar-item-color: var(--text-color);
   --sar-navbar-title-font-size: 32rpx;
 }
 
@@ -332,7 +330,7 @@ onShow(() => {
 .login-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: var(--edit-text-main);
+  color: var(--text-color);
 }
 
 :deep(.login-btn) {
@@ -344,7 +342,7 @@ onShow(() => {
   align-items: center;
   gap: 12rpx;
   padding: 40rpx 32rpx;
-  color: var(--edit-text-sub);
+  color: var(--secondary-text-color);
 }
 
 .loading-text {
@@ -385,7 +383,7 @@ onShow(() => {
 
 .avatar-placeholder {
   font-size: 64rpx;
-  color: #9ca3af;
+  color: var(--third-text-color);
 }
 
 .avatar-edit {
@@ -444,7 +442,7 @@ onShow(() => {
 .avatar-tip {
   margin-top: 8rpx;
   font-size: 22rpx;
-  color: var(--edit-text-sub);
+  color: var(--secondary-text-color);
 }
 
 .section-label {
@@ -453,7 +451,7 @@ onShow(() => {
   border-bottom: 1rpx solid var(--edit-border);
   font-size: 22rpx;
   font-weight: 600;
-  color: var(--edit-text-sub);
+  color: var(--secondary-text-color);
   letter-spacing: 2rpx;
 }
 
@@ -491,7 +489,7 @@ onShow(() => {
 
 :deep(.form-input .sar-input__control) {
   text-align: right;
-  color: var(--edit-text-main);
+  color: var(--text-color);
 }
 
 :deep(.form-radio-group) {
@@ -508,13 +506,13 @@ onShow(() => {
 
 :deep(.form-radio-group .sar-radio__label) {
   font-size: 26rpx;
-  color: var(--edit-text-main);
+  color: var(--text-color);
 }
 
 .form-tip {
   padding: 16rpx 32rpx 0;
   font-size: 22rpx;
-  color: var(--edit-text-sub);
+  color: var(--secondary-text-color);
   text-align: center;
 }
 

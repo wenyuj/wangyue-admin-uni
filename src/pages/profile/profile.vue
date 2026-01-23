@@ -381,15 +381,13 @@ onShow(() => {
 .profile-page {
   min-height: 100vh;
   background-color: var(--profile-bg);
-  color: var(--profile-text-main);
+  color: var(--text-color);
   line-height: 1.5;
   font-family: 'Plus Jakarta Sans', sans-serif;
   --profile-bg: #f1f5f9;
   --profile-card: #ffffff;
   --profile-border: #e2e8f0;
   --profile-border-soft: rgba(226, 232, 240, 0.5);
-  --profile-text-main: #1e293b;
-  --profile-text-sub: #64748b;
   --profile-primary-dark: #535bf2;
   --profile-success: #10b981;
   --profile-shadow: 0 10rpx 24rpx rgba(15, 23, 42, 0.06);
@@ -422,7 +420,7 @@ onShow(() => {
 .login-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: var(--profile-text-main);
+  color: var(--text-color);
 }
 
 :deep(.login-btn) {
@@ -434,7 +432,7 @@ onShow(() => {
   align-items: center;
   gap: 12rpx;
   padding: 24rpx 40rpx;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
 }
 
 .loading-text {
@@ -515,7 +513,7 @@ onShow(() => {
   font-size: 38rpx;
   font-weight: 700;
   font-family: 'Playfair Display', serif;
-  color: var(--profile-text-main);
+  color: var(--text-color);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -526,7 +524,7 @@ onShow(() => {
   margin-top: 8rpx;
   font-size: 26rpx;
   font-weight: 600;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -542,7 +540,7 @@ onShow(() => {
 .meta-chip {
   font-size: 20rpx;
   font-family: 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
-  color: #94a3b8;
+  color: var(--third-text-color);
   background: #f8fafc;
   border: 1rpx solid #e2e8f0;
   padding: 4rpx 12rpx;
@@ -564,7 +562,7 @@ onShow(() => {
 .refreshing-tip {
   margin: 12rpx 40rpx 0;
   font-size: 22rpx;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
 }
 
 .stats-panel {
@@ -604,7 +602,7 @@ onShow(() => {
 .stat-label {
   font-size: 20rpx;
   font-weight: 700;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
   letter-spacing: 4rpx;
   text-transform: uppercase;
 }
@@ -612,7 +610,7 @@ onShow(() => {
 .stat-value {
   font-size: 44rpx;
   font-weight: 700;
-  color: var(--profile-text-main);
+  color: var(--text-color);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -635,7 +633,7 @@ onShow(() => {
   padding: 24rpx 40rpx 12rpx;
   font-size: 20rpx;
   font-weight: 700;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
   letter-spacing: 4rpx;
   text-transform: uppercase;
 }
@@ -669,19 +667,19 @@ onShow(() => {
 
 .menu-icon {
   font-size: 44rpx;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
 }
 
 .menu-title {
   flex: 1;
   font-size: 28rpx;
   font-weight: 500;
-  color: var(--profile-text-main);
+  color: var(--text-color);
 }
 
 .menu-badge {
   font-size: 20rpx;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
   background: #f8fafc;
   border: 1rpx solid #e2e8f0;
   padding: 4rpx 10rpx;
@@ -691,7 +689,7 @@ onShow(() => {
 
 .menu-arrow {
   font-size: 32rpx;
-  color: #cbd5e1;
+  color: var(--third-text-color);
 }
 
 .logout-button {
@@ -714,7 +712,7 @@ onShow(() => {
   padding: 24rpx 40rpx 40rpx;
   text-align: center;
   font-size: 20rpx;
-  color: var(--profile-text-sub);
+  color: var(--secondary-text-color);
   font-family: 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
   letter-spacing: 4rpx;
   text-transform: uppercase;

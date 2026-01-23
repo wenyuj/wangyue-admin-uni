@@ -181,14 +181,13 @@ onShow(() => {
 .page {
   min-height: 100vh;
   background-color: #ffffff;
-  color: #111827;
+  color: var(--text-color);
   line-height: 1.5;
   font-family: 'Noto Sans SC', 'Inter', sans-serif;
   --change-border: #e5e7eb;
-  --change-text-sub: #6b7280;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
-  --sar-navbar-title-color: #111827;
-  --sar-navbar-item-color: #111827;
+  --sar-navbar-title-color: var(--text-color);
+  --sar-navbar-item-color: var(--text-color);
   --sar-navbar-title-font-size: 32rpx;
 }
 
@@ -214,7 +213,7 @@ onShow(() => {
 .login-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-color);
 }
 
 :deep(.login-btn) {
@@ -230,13 +229,13 @@ onShow(() => {
 .intro-title {
   font-size: 40rpx;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color);
 }
 
 .intro-desc {
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: var(--change-text-sub);
+  color: var(--secondary-text-color);
 }
 
 .form-section {
@@ -269,11 +268,11 @@ onShow(() => {
 }
 
 :deep(.form-input .sar-input__control) {
-  color: #111827;
+  color: var(--text-color);
 }
 
 :deep(.form-input .sar-input__eye) {
-  color: #9ca3af;
+  color: var(--third-text-color);
 }
 
 .action-area {
@@ -291,7 +290,7 @@ onShow(() => {
 .helper-text {
   margin-top: 24rpx;
   font-size: 22rpx;
-  color: #9ca3af;
+  color: var(--third-text-color);
   text-align: center;
 }
 </style>

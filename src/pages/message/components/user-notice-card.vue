@@ -68,13 +68,13 @@ function handleClick() {
   align-items: center;
   justify-content: center;
   background: rgba(148, 163, 184, 0.2);
-  color: #94a3b8;
+  color: var(--third-text-color);
   flex-shrink: 0;
 }
 
 .message-row.is-unread .message-icon {
-  background: rgba(100, 108, 255, 0.12);
-  color: #646cff;
+  background: rgba(var(--primary-color-rgb), 0.12);
+  color: var(--primary-color);
 }
 
 .icon {
@@ -104,7 +104,7 @@ function handleClick() {
 .message-title {
   font-size: 28rpx;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-color);
   line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,7 +114,7 @@ function handleClick() {
 .message-time {
   font-size: 20rpx;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--third-text-color);
   white-space: nowrap;
 }
 
@@ -122,14 +122,14 @@ function handleClick() {
   width: 10rpx;
   height: 10rpx;
   border-radius: 999rpx;
-  background: #faad14;
+  background: var(--warning-color);
   flex-shrink: 0;
 }
 
 .message-preview {
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #64748b;
+  color: var(--secondary-text-color);
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;

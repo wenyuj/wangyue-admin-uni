@@ -27,9 +27,9 @@ const navTitle = computed(() => t('message.detail.title', { locale: currentLocal
 const tagStyle = {
   img: 'max-width: 100%; height: auto; display: block;',
   table: 'width: 100%; border-collapse: collapse;',
-  p: 'line-height: 1.7; color: #1e293b; font-size: 16px;',
-  a: 'color: #646cff;',
-  strong: 'font-weight: 600; color: #1e293b;',
+  p: 'line-height: 1.7; color: var(--text-color); font-size: 16px;',
+  a: 'color: var(--primary-color);',
+  strong: 'font-weight: 600; color: var(--text-color);',
 }
 
 // 视图字段兜底，确保空数据也能正确展示
@@ -113,13 +113,12 @@ onShow(() => {
 .page {
   min-height: 100vh;
   background-color: #ffffff;
-  color: #1e293b;
+  color: var(--text-color);
   font-family: 'Plus Jakarta Sans', sans-serif;
   --detail-border: #e2e8f0;
-  --detail-text-sub: #64748b;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
-  --sar-navbar-title-color: #1e293b;
-  --sar-navbar-item-color: #1e293b;
+  --sar-navbar-title-color: var(--text-color);
+  --sar-navbar-item-color: var(--text-color);
   --sar-navbar-title-font-size: 32rpx;
 }
 
@@ -139,7 +138,7 @@ onShow(() => {
 .detail-title {
   font-size: 40rpx;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-color);
   line-height: 1.3;
 }
 
@@ -171,7 +170,7 @@ onShow(() => {
 .detail-time {
   font-size: 24rpx;
   font-weight: 500;
-  color: var(--detail-text-sub);
+  color: var(--secondary-text-color);
   letter-spacing: 2rpx;
 }
 
@@ -188,7 +187,7 @@ onShow(() => {
 .loading {
   text-align: center;
   padding: 120rpx 0;
-  color: var(--detail-text-sub);
+  color: var(--secondary-text-color);
   font-size: 26rpx;
 }
 </style>
