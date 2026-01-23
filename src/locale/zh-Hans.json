@@ -38,7 +38,7 @@
   "profile.role.none": "暂无角色",
   "profile.idLabel": "ID",
   "profile.language.title": "选择语言",
-  "profile.version": "版本 {version} (构建 {build})",
+  "profile.version": "版本 {version}",
   "profile.edit.title": "资料编辑",
   "profile.edit.loading": "正在加载资料",
   "profile.edit.avatar.uploading": "上传中...",

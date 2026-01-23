@@ -26,26 +26,20 @@ const profileLoading = ref(false)
 const currentLocale = ref(uni.getLocale())
 const languageVisible = ref(false)
 const languageValue = ref(currentLocale.value)
+const safeTopRpx = ref(0)
 
-// 个人资料兜底（仅用于头像/ID）
-const fallbackProfile = {
-  id: '894-2201',
-  avatar:
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuDLZdvNxwVHnetQj-jIRR_bg8GpPLoivQL5dYitM9nhPEpWRSM58Yhj7tO6R7TvZadRkyWJGOYWb2XpQtUzgtvn70d9OiHKPJxEzlFnLXonEfhl4DNjfpA1viEfE9dJ6Hud_CJurknq6mD9qi0ZHXnRmdzEquA5kynBbsfVeGSAyVDH7Lr_kC0ipf-BrToKI91YANKjxX0qCneFlz-JfJqCvsOp-Ast0gEISFJxodeiqY3lgaSrHRXD1CPbAhlDjgS-APSlpEh-YlE',
-}
-
-// 显式依赖 currentLocale，确保文案随语言切换更新
-const fallbackName = computed(() => t('profile.fallback.name', { locale: currentLocale.value }))
-const fallbackRole = computed(() => t('profile.fallback.role', { locale: currentLocale.value }))
+const profileSectionPaddingTop = computed(() => `${48 + safeTopRpx.value}rpx`)
 
 // 个人资料卡展示字段
-const displayName = computed(() => userInfo.value.nickName || userInfo.value.userName || fallbackName.value)
-const userIdLabel = computed(() => (userInfo.value.userId > 0 ? String(userInfo.value.userId) : fallbackProfile.id))
-const roleLabel = computed(() => {
-  const label = getRoleLabel(userStore.roles?.[0] ?? userInfo.value.roleList?.[0])
-  return label || fallbackRole.value
+const displayName = computed(() => {
+  if (!tokenStore.hasLogin)
+    return '未登录'
+  return userInfo.value.nickName || userInfo.value.userName
 })
-const avatarUrl = computed(() => userInfo.value.avatar || fallbackProfile.avatar)
+const roleLabels = computed(() => (userInfo.value.roleList ?? [])
+  .map(role => getRoleLabel(role))
+  .filter(Boolean))
+const avatarUrl = computed(() => userInfo.value.avatar || '/static/images/default-avatar.png')
 
 // 三宫格静态占位数据（后续可替换成接口数据）
 const statCards = [
@@ -107,8 +101,7 @@ const currentLocaleLabel = computed(() => {
 })
 // 版本信息与展示文案
 const versionInfo = {
-  version: '2.4.0',
-  build: '3902',
+  version: '1.0.0',
 }
 const versionLabel = computed(() => t('profile.version', { ...versionInfo, locale: currentLocale.value }))
 
@@ -131,6 +124,11 @@ function syncLocale() {
   currentLocale.value = locale
   languageValue.value = locale
   i18n.global.locale = locale
+}
+
+function updateSafeTop() {
+  const { statusBarHeight = 0, screenWidth = 375 } = uni.getSystemInfoSync()
+  safeTopRpx.value = screenWidth ? Math.round(statusBarHeight * 750 / screenWidth) : 0
 }
 
 // 应用语言切换
@@ -174,13 +172,6 @@ async function refreshProfile() {
   }
 }
 
-// 前往登录页
-function handleLogin() {
-  uni.navigateTo({
-    url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/profile/profile')}`,
-  })
-}
-
 // 退出登录确认
 function handleLogout() {
   dialog.confirm({
@@ -191,6 +182,9 @@ function handleLogout() {
     onConfirm: () => {
       tokenStore.logout()
       toast.success(t('profile.logout.success'))
+      uni.redirectTo({
+        url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/profile/profile')}`,
+      })
     },
   })
 }
@@ -233,135 +227,125 @@ const supportItems = [
 onShow(() => {
   syncLocale()
   refreshProfile()
+  updateSafeTop()
 })
 </script>
 
 <template>
   <view class="profile-page">
     <view class="content">
-      <!-- 未登录状态 -->
-      <view v-if="!tokenStore.hasLogin" class="card login-card">
-        <view class="login-title">
-          {{ $t('profile.login.required') }}
-        </view>
-        <sar-button type="primary" root-class="login-btn" @click="handleLogin">
-          {{ $t('profile.login.button') }}
-        </sar-button>
+      <!-- 加载骨架 -->
+      <view v-if="showSkeleton" class="loading-block">
+        <sar-loading type="circular" />
+        <text class="loading-text">{{ $t('profile.loading.profile') }}</text>
       </view>
 
       <template v-else>
-        <!-- 加载骨架 -->
-        <view v-if="showSkeleton" class="loading-block">
-          <sar-loading type="circular" />
-          <text class="loading-text">{{ $t('profile.loading.profile') }}</text>
+        <!-- 个人资料卡片 -->
+        <view class="profile-section" :style="{ paddingTop: profileSectionPaddingTop }" @click="openEditProfile">
+          <view class="profile-avatar">
+            <view class="avatar-ring">
+              <view class="avatar-inner">
+                <image :src="avatarUrl" mode="aspectFill" class="avatar-image" />
+              </view>
+            </view>
+          </view>
+          <view class="profile-basic">
+            <view class="display-name">
+              {{ displayName }}
+            </view>
+            <view v-if="roleLabels.length" class="role-list">
+              <text
+                v-for="(role, index) in roleLabels"
+                :key="`${role}-${index}`"
+                class="meta-chip"
+              >
+                {{ role }}
+              </text>
+            </view>
+          </view>
+          <view class="profile-action" @click.stop="openEditProfile">
+            <view class="action-icon i-carbon-edit" />
+          </view>
         </view>
 
-        <template v-else>
-          <!-- 个人资料卡片 -->
-          <view class="profile-section" @click="openEditProfile">
-            <view class="profile-avatar">
-              <view class="avatar-ring">
-                <view class="avatar-inner">
-                  <image :src="avatarUrl" mode="aspectFill" class="avatar-image" />
-                </view>
-              </view>
-              <view class="avatar-edit" @click.stop="openEditProfile">
-                <view class="edit-icon i-carbon-edit" />
-              </view>
+        <!-- 刷新提示 -->
+        <view v-if="showRefreshing" class="refreshing-tip">
+          {{ $t('profile.refreshing.profile') }}
+        </view>
+
+        <!-- 三宫格统计 -->
+        <view class="stats-panel">
+          <view
+            v-for="item in statCards"
+            :key="item.id"
+            class="stats-item"
+            :class="{ 'stats-item--alert': item.alert }"
+            :style="{ '--tone-rgb': item.toneRgb }"
+          >
+            <view class="stat-label">
+              {{ $t(item.labelKey) }}
             </view>
-
-            <view class="profile-basic">
-              <view class="display-name">
-                {{ displayName }}
-              </view>
-              <view class="role-title">
-                {{ roleLabel }}
-              </view>
-              <view class="profile-meta">
-                <text class="meta-chip">{{ $t('profile.idLabel') }}: {{ userIdLabel }}</text>
-                <text class="meta-action" @click.stop="openEditProfile">{{ $t('profile.action.view') }}</text>
-              </view>
+            <view class="stat-value">
+              {{ item.value }}
             </view>
-          </view>
-
-          <!-- 刷新提示 -->
-          <view v-if="showRefreshing" class="refreshing-tip">
-            {{ $t('profile.refreshing.profile') }}
-          </view>
-
-          <!-- 三宫格统计 -->
-          <view class="stats-panel">
-            <view
-              v-for="item in statCards"
-              :key="item.id"
-              class="stats-item"
-              :class="{ 'stats-item--alert': item.alert }"
-              :style="{ '--tone-rgb': item.toneRgb }"
-            >
-              <view class="stat-label">
-                {{ $t(item.labelKey) }}
-              </view>
-              <view class="stat-value">
-                {{ item.value }}
-              </view>
-              <view class="stat-sparkline">
-                <view
-                  v-for="(bar, index) in item.bars"
-                  :key="`${item.id}-${index}`"
-                  class="stat-bar"
-                  :style="{ 'height': `${bar.height}%`, '--bar-opacity': bar.opacity }"
-                />
-              </view>
+            <view class="stat-sparkline">
+              <view
+                v-for="(bar, index) in item.bars"
+                :key="`${item.id}-${index}`"
+                class="stat-bar"
+                :style="{ 'height': `${bar.height}%`, '--bar-opacity': bar.opacity }"
+              />
             </view>
           </view>
+        </view>
 
-          <!-- 账户分组 -->
-          <view class="section-label">
-            {{ $t('profile.section.account') }}
+        <!-- 账户分组 -->
+        <view class="section-label">
+          {{ $t('profile.section.account') }}
+        </view>
+        <view class="menu-section">
+          <view
+            v-for="item in accountItems"
+            :key="item.id"
+            class="menu-item"
+            hover-class="menu-item--active"
+            @click="item.action"
+          >
+            <view class="menu-icon" :class="item.icon" />
+            <text class="menu-title">{{ $t(item.labelKey) }}</text>
+            <text v-if="item.id === 'language'" class="menu-badge">{{ currentLocaleLabel }}</text>
+            <view class="menu-arrow i-carbon-chevron-right" />
           </view>
-          <view class="menu-section">
-            <view
-              v-for="item in accountItems"
-              :key="item.id"
-              class="menu-item"
-              hover-class="menu-item--active"
-              @click="item.action"
-            >
-              <view class="menu-icon" :class="item.icon" />
-              <text class="menu-title">{{ $t(item.labelKey) }}</text>
-              <text v-if="item.id === 'language'" class="menu-badge">{{ currentLocaleLabel }}</text>
-              <view class="menu-arrow i-carbon-chevron-right" />
-            </view>
-          </view>
+        </view>
 
-          <!-- 支持分组 -->
-          <view class="section-label">
-            {{ $t('profile.section.support') }}
+        <!-- 支持分组 -->
+        <view class="section-label">
+          {{ $t('profile.section.support') }}
+        </view>
+        <view class="menu-section">
+          <view
+            v-for="item in supportItems"
+            :key="item.id"
+            class="menu-item"
+            hover-class="menu-item--active"
+            @click="item.action"
+          >
+            <view class="menu-icon" :class="item.icon" />
+            <text class="menu-title">{{ $t(item.labelKey) }}</text>
+            <view class="menu-arrow i-carbon-chevron-right" />
           </view>
-          <view class="menu-section">
-            <view
-              v-for="item in supportItems"
-              :key="item.id"
-              class="menu-item"
-              hover-class="menu-item--active"
-              @click="item.action"
-            >
-              <view class="menu-icon" :class="item.icon" />
-              <text class="menu-title">{{ $t(item.labelKey) }}</text>
-              <view class="menu-arrow i-carbon-chevron-right" />
-            </view>
-          </view>
+        </view>
 
-          <!-- 退出登录 -->
-          <view class="logout-button" @click="handleLogout">
-            {{ $t('profile.action.logout') }}
-          </view>
+        <!-- 退出登录 -->
+        <view class="logout-button" @click="handleLogout">
+          {{ $t('profile.action.logout') }}
+        </view>
 
-          <!-- 版本信息 -->
-          <view class="version-text">
-            {{ versionLabel }}
-          </view>
-        </template>
+        <!-- 版本信息 -->
+        <view class="version-text">
+          {{ versionLabel }}
+        </view>
       </template>
     </view>
 
@@ -386,45 +370,11 @@ onShow(() => {
   font-family: 'Plus Jakarta Sans', sans-serif;
   --profile-bg: #f1f5f9;
   --profile-card: #ffffff;
-  --profile-border: #e2e8f0;
   --profile-border-soft: rgba(226, 232, 240, 0.5);
-  --profile-primary-dark: #535bf2;
-  --profile-success: #10b981;
-  --profile-shadow: 0 10rpx 24rpx rgba(15, 23, 42, 0.06);
 }
 
 .content {
   width: 100%;
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
-}
-
-.card {
-  background: var(--profile-card);
-  border-radius: 24rpx;
-  padding: 48rpx 32rpx;
-  border: 1rpx solid var(--profile-border);
-  box-shadow: var(--profile-shadow);
-  margin: 32rpx 0 24rpx;
-}
-
-.login-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16rpx;
-  padding: 48rpx 24rpx;
-}
-
-.login-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-:deep(.login-btn) {
-  width: 60%;
 }
 
 .loading-block {
@@ -480,30 +430,6 @@ onShow(() => {
   height: 100%;
 }
 
-.avatar-edit {
-  position: absolute;
-  right: -6rpx;
-  bottom: -6rpx;
-  width: 44rpx;
-  height: 44rpx;
-  border-radius: 999rpx;
-  background: #ffffff;
-  border: 1rpx solid rgba(226, 232, 240, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.08);
-}
-
-.avatar-edit:active {
-  background: #f8fafc;
-}
-
-.edit-icon {
-  font-size: 24rpx;
-  color: var(--primary-color);
-}
-
 .profile-basic {
   flex: 1;
   min-width: 0;
@@ -512,7 +438,6 @@ onShow(() => {
 .display-name {
   font-size: 38rpx;
   font-weight: 700;
-  font-family: 'Playfair Display', serif;
   color: var(--text-color);
   line-height: 1.2;
   overflow: hidden;
@@ -520,20 +445,10 @@ onShow(() => {
   white-space: nowrap;
 }
 
-.role-title {
-  margin-top: 8rpx;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--secondary-text-color);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profile-meta {
+.role-list {
   margin-top: 12rpx;
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 16rpx;
 }
 
@@ -547,16 +462,24 @@ onShow(() => {
   border-radius: 12rpx;
 }
 
-.meta-action {
-  font-size: 20rpx;
-  font-weight: 600;
+.profile-action {
+  margin-left: 16rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--primary-color);
-  letter-spacing: 2rpx;
-  text-transform: uppercase;
+  background: rgba(var(--primary-color-rgb), 0.12);
 }
 
-.meta-action:active {
-  color: var(--profile-primary-dark);
+.profile-action:active {
+  background: rgba(var(--primary-color-rgb), 0.2);
+}
+
+.action-icon {
+  font-size: 32rpx;
 }
 
 .refreshing-tip {

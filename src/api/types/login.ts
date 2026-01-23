@@ -17,7 +17,10 @@ export type UserGender = '0' | '1'
 /** enable status */
 export type EnableStatus = '0' | '1'
 
-export type RoleInfo = Record<string, any> | string
+export interface RoleInfo {
+  roleId: number
+  roleName: string
+}
 
 /**
  * 用户信息

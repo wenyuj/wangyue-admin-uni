@@ -1,4 +1,4 @@
-import type { RoleInfo, UserInfo, UserProfileResponse } from '@/api/types/login'
+import type { UserInfo, UserProfileResponse } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getUserInfo } from '@/api/methods/auth'
@@ -12,7 +12,7 @@ const userInfoState: UserInfo = {
   email: '',
   phoneNumber: '',
   sex: '0',
-  avatar: '/static/images/default-avatar.png',
+  avatar: '',
   avatarFileId: null,
   password: '',
   status: '0',
@@ -22,7 +22,7 @@ const userInfoState: UserInfo = {
   roleList: [],
   permissionList: [],
 }
-const rolesState: RoleInfo[] = []
+const rolesState: string[] = []
 const permissionsState: string[] = []
 
 export const useUserStore = defineStore(
@@ -30,21 +30,18 @@ export const useUserStore = defineStore(
   () => {
     // 定义用户信息
     const userInfo = ref<UserInfo>({ ...userInfoState })
-    const roles = ref<RoleInfo[]>([...rolesState])
+    const roles = ref<string[]>([...rolesState])
     const permissions = ref<string[]>([...permissionsState])
     // 设置用户信息
     const setUserInfo = (val: UserInfo) => {
-      // 若头像为空 则使用默认头像
-      if (!val.avatar) {
-        val.avatar = userInfoState.avatar
-      }
       userInfo.value = {
         ...val,
+        avatar: val.avatar || '',
       }
     }
     const setUserProfile = (profile: UserProfileResponse) => {
       setUserInfo(profile.user)
-      roles.value = profile.roles ?? profile.user.roleList ?? []
+      roles.value = profile.roles ?? []
       permissions.value = profile.permissions ?? profile.user.permissionList ?? []
     }
     const setUserAvatar = (avatar: string) => {

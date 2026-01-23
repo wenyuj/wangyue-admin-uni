@@ -38,7 +38,7 @@
   "profile.role.none": "No role",
   "profile.idLabel": "ID",
   "profile.language.title": "Select Language",
-  "profile.version": "Version {version} (Build {build})",
+  "profile.version": "Version {version}",
   "profile.edit.title": "Edit Profile",
   "profile.edit.loading": "Loading profile",
   "profile.edit.avatar.uploading": "Uploading...",
