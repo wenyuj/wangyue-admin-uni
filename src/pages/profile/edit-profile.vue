@@ -293,7 +293,6 @@ onShow(() => {
   background-color: #f8f9fa;
   color: var(--text-color);
   line-height: 1.5;
-  font-family: 'Noto Sans SC', 'Inter', sans-serif;
   --edit-primary-hover: #535bf2;
   --edit-border: #e5e7eb;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
@@ -303,11 +302,9 @@ onShow(() => {
 }
 
 .content {
-  min-height: calc(100vh - var(--sar-navbar-height) - env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 
 :deep(.sar-navbar__fixation) {
@@ -424,8 +421,7 @@ onShow(() => {
 
 :deep(.avatar-change-btn) {
   background: transparent;
-  border: none;
-  padding: 0;
+  border: 0;
   font-size: 24rpx;
   font-weight: 500;
   color: var(--primary-color);
@@ -517,7 +513,7 @@ onShow(() => {
 }
 
 .footer {
-  margin-top: auto;
+  margin-top: 48rpx;
   padding: 32rpx;
   background: #ffffff;
 }
