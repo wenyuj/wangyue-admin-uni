@@ -31,6 +31,9 @@ const messageStore = useMessageStore()
 type MessageTab = 'system' | 'notice'
 interface ReadRecord { type: MessageTab, id: number }
 
+const safeTopRpx = ref(0)
+const messageSafeTop = computed(() => `${safeTopRpx.value}rpx`)
+
 // 当前列表类型（系统消息 / 平台公告）
 const currentTab = ref<MessageTab>('system')
 // 详情页返回后仅标记已读，避免强制刷新导致下拉状态卡死
@@ -43,6 +46,15 @@ const PREVIEW_MAX = 60
 // 顶部回到列表起点，避免切换/刷新时滚动位置干扰体验
 function scrollListToTop() {
   uni.pageScrollTo({ scrollTop: 0, duration: 0 })
+}
+
+function updateSafeTop() {
+  const info = typeof uni.getWindowInfo === 'function'
+    ? uni.getWindowInfo()
+    : uni.getSystemInfoSync()
+  const screenWidth = info.screenWidth || 375
+  const statusBarHeight = info.statusBarHeight || 0
+  safeTopRpx.value = screenWidth ? Math.round(statusBarHeight * 750 / screenWidth) : 0
 }
 
 // 系统消息内容可能包含 HTML，列表仅取纯文本预览
@@ -262,6 +274,7 @@ function markListRead(payload: ReadRecord) {
 
 // 页面显示时保证字典与角标同步，并应用返回已读标记
 onShow(async () => {
+  updateSafeTop()
   currentLocale.value = uni.getLocale()
   await dictStore.ensureDicts(['read_status', 'sys_notice_type'])
   await messageStore.refreshUnread()
@@ -270,10 +283,14 @@ onShow(async () => {
     lastRead.value = null
   }
 })
+
+onLoad(() => {
+  updateSafeTop()
+})
 </script>
 
 <template>
-  <view class="page">
+  <view class="page" :style="{ '--message-safe-top': messageSafeTop }">
     <sar-navbar status-bar fixed :title="navTitle" />
 
     <sar-pull-down-refresh
@@ -324,7 +341,7 @@ onShow(async () => {
           </sar-button>
         </view>
 
-        <view v-show="currentTab === 'system'" class="list">
+        <view v-if="currentTab === 'system'" class="list">
           <view v-if="!systemPager.loading.value && systemList.length === 0" class="empty">
             <sar-empty :description="$t('message.empty.system')" />
           </view>
@@ -347,7 +364,7 @@ onShow(async () => {
           />
         </view>
 
-        <view v-show="currentTab === 'notice'" class="list">
+        <view v-else class="list">
           <view v-if="!noticePager.loading.value && noticeList.length === 0" class="empty">
             <sar-empty :description="$t('message.empty.notice')" />
           </view>
@@ -414,6 +431,12 @@ onShow(async () => {
   border-bottom: 1rpx solid rgba(226, 232, 240, 0.8);
   backdrop-filter: blur(16rpx);
 }
+
+/* #ifdef MP-WEIXIN */
+.tabs-row {
+  top: calc(var(--sar-navbar-height) + var(--message-safe-top, 0rpx));
+}
+/* #endif */
 
 .tabs-scroll {
   flex: 1;
