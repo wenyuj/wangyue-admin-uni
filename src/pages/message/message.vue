@@ -380,9 +380,6 @@ onShow(async () => {
   background-color: #ffffff;
   color: #1e293b;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  --message-primary: #646cff;
-  --message-primary-dark: #535bf2;
-  --message-warning: #faad14;
   --message-text-main: #1e293b;
   --message-text-sub: #64748b;
   --message-border: #e2e8f0;
@@ -443,7 +440,7 @@ onShow(async () => {
 }
 
 .tab-item--active {
-  color: var(--message-primary);
+  color: var(--primary-color);
   font-weight: 600;
 }
 
@@ -455,7 +452,7 @@ onShow(async () => {
   width: 10rpx;
   height: 10rpx;
   border-radius: 999rpx;
-  background: var(--message-warning);
+  background: var(--warning-color);
 }
 
 .tab-underline {
@@ -465,13 +462,13 @@ onShow(async () => {
   bottom: 0;
   height: 4rpx;
   border-radius: 999rpx;
-  background: var(--message-primary);
+  background: var(--primary-color);
 }
 
 :deep(.read-all-btn) {
   margin-left: auto;
   font-weight: 600;
-  color: var(--message-primary);
+  color: var(--primary-color);
 }
 
 .list {

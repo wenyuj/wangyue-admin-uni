@@ -238,8 +238,6 @@ onShow(() => {
 
 <template>
   <view class="profile-page">
-    <!-- 自定义导航栏 -->
-    <sar-navbar status-bar fixed title="" />
     <view class="content">
       <!-- 未登录状态 -->
       <view v-if="!tokenStore.hasLogin" class="card login-card">
@@ -392,26 +390,16 @@ onShow(() => {
   --profile-border-soft: rgba(226, 232, 240, 0.5);
   --profile-text-main: #1e293b;
   --profile-text-sub: #64748b;
-  --profile-primary: #646cff;
   --profile-primary-dark: #535bf2;
-  --profile-info: #2080f0;
   --profile-success: #10b981;
-  --profile-danger: #f5222d;
   --profile-shadow: 0 10rpx 24rpx rgba(15, 23, 42, 0.06);
-  --sar-navbar-bg: rgba(255, 255, 255, 0.95);
-  --sar-navbar-title-color: var(--profile-text-main);
-  --sar-navbar-item-color: var(--profile-text-main);
-  --sar-navbar-title-font-size: 32rpx;
 }
 
 .content {
   width: 100%;
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
   padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
-}
-
-:deep(.sar-navbar__fixation) {
-  backdrop-filter: blur(16rpx);
-  border-bottom: 1rpx solid rgba(226, 232, 240, 0.8);
 }
 
 .card {
@@ -515,7 +503,7 @@ onShow(() => {
 
 .edit-icon {
   font-size: 24rpx;
-  color: var(--profile-primary);
+  color: var(--primary-color);
 }
 
 .profile-basic {
@@ -564,7 +552,7 @@ onShow(() => {
 .meta-action {
   font-size: 20rpx;
   font-weight: 600;
-  color: var(--profile-primary);
+  color: var(--primary-color);
   letter-spacing: 2rpx;
   text-transform: uppercase;
 }
@@ -609,7 +597,7 @@ onShow(() => {
   width: 12rpx;
   height: 12rpx;
   border-radius: 50%;
-  background: var(--profile-danger);
+  background: var(--danger-color);
   border: 2rpx solid #ffffff;
 }
 
@@ -676,7 +664,7 @@ onShow(() => {
 }
 
 .menu-item--active .menu-icon {
-  color: var(--profile-primary);
+  color: var(--primary-color);
 }
 
 .menu-icon {
@@ -714,8 +702,8 @@ onShow(() => {
   text-align: center;
   font-size: 28rpx;
   font-weight: 600;
-  color: var(--profile-danger);
-  margin-top: 16rpx;
+  color: var(--danger-color);
+  margin-top: 48rpx;
 }
 
 .logout-button:active {

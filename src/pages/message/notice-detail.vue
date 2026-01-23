@@ -126,10 +126,6 @@ onShow(() => {
   background-color: #ffffff;
   color: #1e293b;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  --detail-primary: #646cff;
-  --detail-primary-dark: #535bf2;
-  --detail-success: #52c41a;
-  --detail-warning: #faad14;
   --detail-border: #e2e8f0;
   --detail-text-sub: #64748b;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
@@ -177,7 +173,7 @@ onShow(() => {
 .detail-tag {
   font-size: 22rpx;
   font-weight: 500;
-  color: var(--detail-success);
+  color: var(--success-color);
   background: rgba(82, 196, 26, 0.1);
   border: 1rpx solid rgba(82, 196, 26, 0.2);
   padding: 4rpx 12rpx;
@@ -185,13 +181,13 @@ onShow(() => {
 }
 
 .detail-tag--unread {
-  color: var(--detail-warning);
+  color: var(--warning-color);
   background: rgba(250, 173, 20, 0.12);
   border-color: rgba(250, 173, 20, 0.25);
 }
 
 .detail-tag--info {
-  color: var(--detail-primary);
+  color: var(--primary-color);
   background: rgba(100, 108, 255, 0.12);
   border-color: rgba(100, 108, 255, 0.2);
 }

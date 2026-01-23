@@ -294,13 +294,10 @@ onShow(() => {
   color: #111827;
   line-height: 1.5;
   font-family: 'Noto Sans SC', 'Inter', sans-serif;
-  --edit-primary: #646cff;
   --edit-primary-hover: #535bf2;
   --edit-border: #e5e7eb;
   --edit-text-main: #111827;
   --edit-text-sub: #6b7280;
-  --sar-primary: var(--edit-primary);
-  --sar-primary-rgb: 100, 108, 255;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
   --sar-navbar-title-color: var(--edit-text-main);
   --sar-navbar-item-color: var(--edit-text-main);
@@ -398,7 +395,7 @@ onShow(() => {
   width: 44rpx;
   height: 44rpx;
   border-radius: 999rpx;
-  background: var(--edit-primary);
+  background: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -433,7 +430,7 @@ onShow(() => {
   padding: 0;
   font-size: 24rpx;
   font-weight: 500;
-  color: var(--edit-primary);
+  color: var(--primary-color);
 }
 
 .avatar-change-btn:active {
@@ -504,7 +501,7 @@ onShow(() => {
   align-items: center;
   --sar-radio-icon-font-size: 36rpx;
   --sar-radio-icon-color: #d1d5db;
-  --sar-radio-icon-checked-color: var(--edit-primary);
+  --sar-radio-icon-checked-color: var(--primary-color);
   --sar-radio-label-margin-left: 12rpx;
   --sar-radio-group-column-gap: 32rpx;
 }

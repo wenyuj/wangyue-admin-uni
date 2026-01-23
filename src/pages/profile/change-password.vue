@@ -184,12 +184,8 @@ onShow(() => {
   color: #111827;
   line-height: 1.5;
   font-family: 'Noto Sans SC', 'Inter', sans-serif;
-  --change-primary: #646cff;
-  --change-primary-hover: #535bf2;
   --change-border: #e5e7eb;
   --change-text-sub: #6b7280;
-  --sar-primary: var(--change-primary);
-  --sar-primary-rgb: 100, 108, 255;
   --sar-navbar-bg: rgba(255, 255, 255, 0.95);
   --sar-navbar-title-color: #111827;
   --sar-navbar-item-color: #111827;
