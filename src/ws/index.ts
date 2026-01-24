@@ -1,6 +1,7 @@
 import type { Pinia } from 'pinia'
+import type { UserMessage, UserNotice } from '@/api/types/message'
 import { effectScope, watch } from 'vue'
-import { useTokenStore } from '@/store'
+import { useMessageStore, useNoticeStore, useSystemMessageStore, useTokenStore } from '@/store'
 import { isDoubleTokenMode } from '@/utils'
 
 // WebSocket 全局管理器：
@@ -59,6 +60,22 @@ function buildWsUrl(baseUrl: string, token: string, topics?: string) {
   return `${baseUrl}${joiner}${params.join('&')}`
 }
 
+const textDecoder = typeof TextDecoder !== 'undefined'
+  ? new TextDecoder('utf-8')
+  : null
+
+// 将二进制消息转换为字符串，避免依赖 downlevelIteration。
+function decodeBinaryPayload(payload: ArrayBuffer | ArrayBufferView) {
+  const buffer = payload instanceof ArrayBuffer ? payload : payload.buffer
+  if (textDecoder)
+    return textDecoder.decode(new Uint8Array(buffer))
+  const bytes = new Uint8Array(buffer)
+  let text = ''
+  for (let i = 0; i < bytes.length; i += 1)
+    text += String.fromCharCode(bytes[i])
+  return text
+}
+
 class WsManager {
   // 当前连接任务（uni.connectSocket 返回）
   private socketTask: UniApp.SocketTask | null = null
@@ -76,6 +93,10 @@ class WsManager {
   private topics = ''
   // 认证与刷新 token 的 store
   private tokenStore: TokenStore | null = null
+  // 统一的消息处理器（避免重复注册）
+  private socketMessageHandler: ((res: { data: unknown }) => void) | null = null
+  // 全局 onSocketMessage 仅注册一次
+  private socketMessageBound = false
 
   // 状态用于外部观察连接生命周期
   status: WsStatus = 'idle'
@@ -131,6 +152,42 @@ class WsManager {
     if (!handlers)
       return
     handlers.forEach(handler => handler(data, message))
+  }
+
+  // 获取或创建 WS 消息处理器：兼容 ArrayBuffer / 字符串 / 对象
+  private getSocketMessageHandler() {
+    if (this.socketMessageHandler)
+      return this.socketMessageHandler
+    this.socketMessageHandler = (res: { data: unknown }) => {
+      const raw = res.data
+      let message: WsMessage | null = null
+      if (raw instanceof ArrayBuffer || ArrayBuffer.isView(raw)) {
+        try {
+          const text = decodeBinaryPayload(raw)
+          message = JSON.parse(text) as WsMessage
+        }
+        catch {
+          return
+        }
+      }
+      else if (typeof raw === 'string') {
+        try {
+          message = JSON.parse(raw) as WsMessage
+        }
+        catch {
+          return
+        }
+      }
+      else if (raw && typeof raw === 'object') {
+        message = raw as WsMessage
+      }
+      if (!message || typeof message.event !== 'string')
+        return
+      if (message.event === 'heartbeat')
+        return
+      this.emit(message.event, message.data, message)
+    }
+    return this.socketMessageHandler
   }
 
   // 更新订阅 topics：
@@ -189,6 +246,17 @@ class WsManager {
       // uni.connectSocket 在不同端可能返回 Promise/SocketTask
       const socketTask = await uni.connectSocket({ url: wsUrl })
       this.socketTask = socketTask
+      const handler = this.getSocketMessageHandler()
+      // 优先使用全局 onSocketMessage，避免部分端 SocketTask.onMessage 不触发
+      if (typeof uni.onSocketMessage === 'function') {
+        if (!this.socketMessageBound) {
+          uni.onSocketMessage(handler)
+          this.socketMessageBound = true
+        }
+      }
+      else {
+        socketTask.onMessage(handler)
+      }
 
       socketTask.onOpen(() => {
         this.status = 'open'
@@ -198,23 +266,6 @@ class WsManager {
           // 连接中被要求重连，则先断开，待 onClose 再重连
           this.disconnect({ manual: true, resetReconnect: false })
         }
-      })
-
-      socketTask.onMessage((res) => {
-        if (typeof res.data !== 'string')
-          return
-        let message: WsMessage
-        try {
-          message = JSON.parse(res.data)
-        }
-        catch {
-          return
-        }
-        if (!message || typeof message.event !== 'string')
-          return
-        if (message.event === 'heartbeat')
-          return
-        this.emit(message.event, message.data, message)
       })
 
       socketTask.onClose(() => {
@@ -361,6 +412,9 @@ export function initWebSocket(pinia: Pinia) {
   wsInitialized = true
 
   const tokenStore = useTokenStore(pinia)
+  const messageStore = useMessageStore(pinia)
+  const systemMessageStore = useSystemMessageStore(pinia)
+  const noticeStore = useNoticeStore(pinia)
   wsManager.bindTokenStore(tokenStore)
 
   // 读取环境变量配置，未启用或缺失 URL 时不建立连接
@@ -372,12 +426,26 @@ export function initWebSocket(pinia: Pinia) {
     url,
   })
 
+  wsManager.on('message', (data) => {
+    if (!data)
+      return
+    systemMessageStore.ingestMessage(data as UserMessage)
+  })
+
+  wsManager.on('notice', (data) => {
+    if (!data)
+      return
+    noticeStore.ingestNotice(data as UserNotice)
+  })
+
   const scope = effectScope()
   scope.run(() => {
     // 监听登录态变化：登录后连接，退出后断开
     watch(
       () => tokenStore.hasLogin,
       (hasLogin) => {
+        if (!hasLogin)
+          messageStore.clear()
         if (!enabled)
           return
         if (hasLogin)

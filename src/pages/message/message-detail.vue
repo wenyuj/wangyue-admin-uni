@@ -2,7 +2,7 @@
 import type { UserMessage } from '@/api/types/message'
 import { getUserMessageDetail, markUserMessageRead } from '@/api/methods/message'
 import { t } from '@/locale'
-import { useDictStore, useMessageStore } from '@/store'
+import { useDictStore, useSystemMessageStore } from '@/store'
 import { handleBack } from '@/utils'
 
 definePage({
@@ -13,7 +13,7 @@ definePage({
 })
 
 const dictStore = useDictStore()
-const messageStore = useMessageStore()
+const systemMessageStore = useSystemMessageStore()
 const currentLocale = ref(uni.getLocale())
 
 // 详情数据与加载状态
@@ -57,7 +57,7 @@ async function loadDetail() {
     if (detail.value) {
       detail.value = { ...detail.value, readFlag: '1' }
     }
-    await messageStore.refreshUnread()
+    await systemMessageStore.refreshUnreadCount()
   }
   finally {
     loading.value = false

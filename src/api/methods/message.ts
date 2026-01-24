@@ -9,12 +9,14 @@ export function getUserMessagePage(params: PageParams) {
 
 // 用户消息未读数量
 export function getUserMessageUnreadCount() {
-  return alova.Get<number | Record<string, any>>('/system/message/unreadCount')
+  return alova.Get<number>('/system/message/unreadCount', {
+    cacheFor: 0,
+  })
 }
 
 // 用户消息未读列表（用于角标/缓存）
 export function getUserMessageUnreadList() {
-  return alova.Get<UserMessage[] | Record<string, any>>('/system/message/unreadList')
+  return alova.Get<UserMessage[]>('/system/message/unreadList')
 }
 
 // 用户消息详情
@@ -39,12 +41,14 @@ export function getNoticePage(params: PageParams) {
 
 // 平台公告未读数量
 export function getNoticeUnreadCount() {
-  return alova.Get<number | Record<string, any>>('/system/notice/user/unreadCount')
+  return alova.Get<number>('/system/notice/user/unreadCount', {
+    cacheFor: 0,
+  })
 }
 
 // 平台公告未读列表（用于角标/缓存）
 export function getNoticeUnreadList() {
-  return alova.Get<UserNotice[] | Record<string, any>>('/system/notice/user/unreadList')
+  return alova.Get<UserNotice[]>('/system/notice/user/unreadList')
 }
 
 // 平台公告详情

@@ -11,7 +11,7 @@ import {
   markAllUserMessageRead,
 } from '@/api/methods/message'
 import { t } from '@/locale'
-import { useDictStore, useMessageStore } from '@/store'
+import { useDictStore, useMessageStore, useNoticeStore, useSystemMessageStore } from '@/store'
 import UserMessageCard from './components/user-message-card.vue'
 import UserNoticeCard from './components/user-notice-card.vue'
 
@@ -27,6 +27,8 @@ const currentLocale = ref(uni.getLocale())
 const navTitle = computed(() => t('tabbar.message', { locale: currentLocale.value }))
 const dictStore = useDictStore()
 const messageStore = useMessageStore()
+const systemMessageStore = useSystemMessageStore()
+const noticeStore = useNoticeStore()
 
 type MessageTab = 'system' | 'notice'
 interface ReadRecord { type: MessageTab, id: number }
@@ -148,8 +150,43 @@ const noticePager = useListPager<UserNotice>((pageNumber, pageSize) => getNotice
   pageSize,
 }))
 
-const systemList = computed(() => systemPager.list.value)
-const noticeList = computed(() => noticePager.list.value)
+// 合并 WS 推送列表与分页列表，保证推送记录置顶且去重。
+function mergeLiveList<T>(
+  liveList: readonly T[] | null | undefined,
+  pagedList: readonly T[] | null | undefined,
+  getId: (item: T) => number | string | undefined,
+): readonly T[] {
+  const live = liveList ?? []
+  const paged = pagedList ?? []
+  if (!live.length)
+    return paged
+  const merged: T[] = []
+  const seen = new Set<number | string>()
+  const pushUnique = (item: T) => {
+    const id = getId(item)
+    if (id !== undefined && id !== null) {
+      if (seen.has(id))
+        return
+      seen.add(id)
+    }
+    merged.push(item)
+  }
+  live.forEach(pushUnique)
+  paged.forEach(pushUnique)
+  return merged
+}
+
+// 列表展示优先推送数据（置顶），并与分页列表去重合并。
+const systemList = computed(() => mergeLiveList(
+  systemMessageStore.liveMessages,
+  systemPager.list.value,
+  item => item.messageId,
+))
+const noticeList = computed(() => mergeLiveList(
+  noticeStore.liveNotices,
+  noticePager.list.value,
+  item => item.noticeId,
+))
 const activePager = computed(() => (currentTab.value === 'system' ? systemPager : noticePager))
 const refreshing = computed(() => activePager.value.refreshing.value)
 const tabItems = computed(() => ([
@@ -229,7 +266,7 @@ function openSystemDetail(id: number) {
 
 // 跳转公告详情，缓存概要数据供详情页兜底
 function openNoticeDetail(item: UserNotice) {
-  messageStore.setActiveNotice(item)
+  noticeStore.setActiveNotice(item)
   lastRead.value = { type: 'notice', id: item.noticeId }
   uni.navigateTo({
     url: `/pages/message/notice-detail?id=${item.noticeId}`,
@@ -261,15 +298,15 @@ onPageScroll(({ scrollTop }) => {
 function markListRead(payload: ReadRecord) {
   if (payload.type === 'system') {
     const target = systemPager.list.value.find(item => item.messageId === payload.id)
-    if (target) {
+    if (target)
       target.readFlag = '1'
-    }
+    systemMessageStore.markLiveMessageRead(payload.id)
     return
   }
   const target = noticePager.list.value.find(item => item.noticeId === payload.id)
-  if (target) {
+  if (target)
     target.readFlag = '1'
-  }
+  noticeStore.markLiveNoticeRead(payload.id)
 }
 
 // 页面显示时保证字典与角标同步，并应用返回已读标记

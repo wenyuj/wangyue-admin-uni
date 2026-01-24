@@ -2,7 +2,7 @@
 import type { NoticeDetail, UserNotice } from '@/api/types/message'
 import { getNoticeDetail, markNoticeRead } from '@/api/methods/message'
 import { t } from '@/locale'
-import { useDictStore, useMessageStore } from '@/store'
+import { useDictStore, useNoticeStore } from '@/store'
 import { handleBack } from '@/utils'
 
 definePage({
@@ -13,7 +13,7 @@ definePage({
 })
 
 const dictStore = useDictStore()
-const messageStore = useMessageStore()
+const noticeStore = useNoticeStore()
 const currentLocale = ref(uni.getLocale())
 
 // 列表摘要与详情数据分离，优先展示摘要，详情加载后覆盖
@@ -56,7 +56,7 @@ async function loadDetail() {
   if (!noticeId.value)
     return
   loading.value = true
-  summary.value = messageStore.getNoticeCache(noticeId.value) || messageStore.activeNotice
+  summary.value = noticeStore.getNoticeCache(noticeId.value) || noticeStore.activeNotice
   try {
     detail.value = await getNoticeDetail(noticeId.value)
   }
@@ -67,7 +67,7 @@ async function loadDetail() {
   if (summary.value) {
     summary.value = { ...summary.value, readFlag: '1' }
   }
-  await messageStore.refreshUnread()
+  await noticeStore.refreshUnreadCount()
 }
 
 // 解析路由参数并初始化字典后拉取详情
