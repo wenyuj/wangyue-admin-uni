@@ -33,7 +33,7 @@ const profileSectionPaddingTop = computed(() => `${48 + safeTopRpx.value}rpx`)
 // 个人资料卡展示字段
 const displayName = computed(() => {
   if (!tokenStore.hasLogin)
-    return '未登录'
+    return t('profile.login.required')
   return userInfo.value.nickName || userInfo.value.userName
 })
 const roleLabels = computed(() => (userInfo.value.roleList ?? [])
@@ -47,41 +47,17 @@ const statCards = [
     id: 'pending',
     labelKey: 'profile.stats.pending',
     value: 12,
-    toneRgb: '32, 128, 240',
-    bars: [
-      { height: 40, opacity: 0.4 },
-      { height: 60, opacity: 0.6 },
-      { height: 30, opacity: 0.4 },
-      { height: 80, opacity: 1 },
-      { height: 50, opacity: 0.6 },
-    ],
   },
   {
     id: 'messages',
     labelKey: 'profile.stats.messages',
     value: 5,
     alert: true,
-    toneRgb: '245, 34, 45',
-    bars: [
-      { height: 20, opacity: 0.3 },
-      { height: 40, opacity: 0.4 },
-      { height: 90, opacity: 1 },
-      { height: 60, opacity: 0.5 },
-      { height: 70, opacity: 0.6 },
-    ],
   },
   {
     id: 'reports',
     labelKey: 'profile.stats.reports',
     value: 8,
-    toneRgb: '16, 185, 129',
-    bars: [
-      { height: 30, opacity: 0.3 },
-      { height: 50, opacity: 0.4 },
-      { height: 40, opacity: 0.3 },
-      { height: 70, opacity: 0.8 },
-      { height: 80, opacity: 1 },
-    ],
   },
 ]
 
@@ -242,62 +218,65 @@ onShow(() => {
 
       <template v-else>
         <!-- 个人资料卡片 -->
-        <view class="profile-section" :style="{ paddingTop: profileSectionPaddingTop }" @click="openEditProfile">
-          <view class="profile-avatar">
-            <view class="avatar-ring">
-              <view class="avatar-inner">
-                <image :src="avatarUrl" mode="aspectFill" class="avatar-image" />
+        <view class="profile-hero" :style="{ paddingTop: profileSectionPaddingTop }">
+          <view class="hero-layer hero-layer--glow hero-layer--glow-right" />
+          <view class="hero-layer hero-layer--glow hero-layer--glow-left" />
+          <view class="hero-content">
+            <view class="profile-section" @click="openEditProfile">
+              <view class="profile-avatar">
+                <view class="avatar-glow" />
+                <view class="avatar-card">
+                  <view class="avatar-frame">
+                    <image :src="avatarUrl" mode="aspectFill" class="avatar-image" />
+                  </view>
+                  <view class="avatar-status">
+                    <view class="status-dot" />
+                  </view>
+                </view>
+              </view>
+              <view class="profile-basic">
+                <view class="display-name">
+                  {{ displayName }}
+                </view>
+                <view class="profile-meta">
+                  <view v-if="roleLabels.length" class="role-list">
+                    <text
+                      v-for="(role, index) in roleLabels"
+                      :key="`${role}-${index}`"
+                      class="role-chip"
+                    >
+                      {{ role }}
+                    </text>
+                  </view>
+                </view>
+              </view>
+              <view class="profile-action">
+                <view class="profile-action-icon i-carbon-edit" />
               </view>
             </view>
-          </view>
-          <view class="profile-basic">
-            <view class="display-name">
-              {{ displayName }}
-            </view>
-            <view v-if="roleLabels.length" class="role-list">
-              <text
-                v-for="(role, index) in roleLabels"
-                :key="`${role}-${index}`"
-                class="meta-chip"
+
+            <!-- 三宫格统计 -->
+            <view class="stats-panel">
+              <view
+                v-for="item in statCards"
+                :key="item.id"
+                class="stats-item"
+                :class="{ 'stats-item--alert': item.alert }"
               >
-                {{ role }}
-              </text>
+                <view class="stat-value">
+                  {{ item.value }}
+                </view>
+                <view class="stat-label">
+                  {{ $t(item.labelKey) }}
+                </view>
+              </view>
             </view>
-          </view>
-          <view class="profile-action" @click.stop="openEditProfile">
-            <view class="action-icon i-carbon-edit" />
           </view>
         </view>
 
         <!-- 刷新提示 -->
         <view v-if="showRefreshing" class="refreshing-tip">
           {{ $t('profile.refreshing.profile') }}
-        </view>
-
-        <!-- 三宫格统计 -->
-        <view class="stats-panel">
-          <view
-            v-for="item in statCards"
-            :key="item.id"
-            class="stats-item"
-            :class="{ 'stats-item--alert': item.alert }"
-            :style="{ '--tone-rgb': item.toneRgb }"
-          >
-            <view class="stat-label">
-              {{ $t(item.labelKey) }}
-            </view>
-            <view class="stat-value">
-              {{ item.value }}
-            </view>
-            <view class="stat-sparkline">
-              <view
-                v-for="(bar, index) in item.bars"
-                :key="`${item.id}-${index}`"
-                class="stat-bar"
-                :style="{ 'height': `${bar.height}%`, '--bar-opacity': bar.opacity }"
-              />
-            </view>
-          </view>
         </view>
 
         <!-- 账户分组 -->
@@ -312,7 +291,9 @@ onShow(() => {
             hover-class="menu-item--active"
             @click="item.action"
           >
-            <view class="menu-icon" :class="item.icon" />
+            <view class="menu-icon">
+              <view class="menu-icon__glyph" :class="item.icon" />
+            </view>
             <text class="menu-title">{{ $t(item.labelKey) }}</text>
             <text v-if="item.id === 'language'" class="menu-badge">{{ currentLocaleLabel }}</text>
             <view class="menu-arrow i-carbon-chevron-right" />
@@ -331,7 +312,9 @@ onShow(() => {
             hover-class="menu-item--active"
             @click="item.action"
           >
-            <view class="menu-icon" :class="item.icon" />
+            <view class="menu-icon">
+              <view class="menu-icon__glyph" :class="item.icon" />
+            </view>
             <text class="menu-title">{{ $t(item.labelKey) }}</text>
             <view class="menu-arrow i-carbon-chevron-right" />
           </view>
@@ -339,7 +322,8 @@ onShow(() => {
 
         <!-- 退出登录 -->
         <view class="logout-button" @click="handleLogout">
-          {{ $t('profile.action.logout') }}
+          <view class="logout-icon i-carbon-logout" />
+          <text class="logout-text">{{ $t('profile.action.logout') }}</text>
         </view>
 
         <!-- 版本信息 -->
@@ -368,13 +352,42 @@ onShow(() => {
   color: var(--text-color);
   line-height: 1.5;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  --profile-bg: #f1f5f9;
+  position: relative;
+  --profile-bg: var(--bg-color);
   --profile-card: #ffffff;
-  --profile-border-soft: rgba(226, 232, 240, 0.5);
+  --profile-card-rgb: 255, 255, 255;
+  --profile-soft-bg: #f8fafc;
+  --profile-avatar-bg: #e2e8f0;
+  --profile-border: rgba(226, 232, 240, 0.7);
+  --profile-border-strong: rgba(226, 232, 240, 0.8);
+  --profile-border-stronger: rgba(226, 232, 240, 0.9);
+  --profile-divider: rgba(226, 232, 240, 0.5);
+  --profile-hero-bg: linear-gradient(
+    180deg,
+    rgba(var(--primary-color-rgb), 0.08) 0%,
+    rgba(var(--bg-color-rgb), 1) 100%
+  );
+  --profile-hero-shadow: 0 40rpx 100rpx -24rpx rgba(var(--primary-color-rgb), 0.1);
+}
+
+.profile-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    0deg,
+    var(--profile-bg) 0%,
+    rgba(var(--bg-color-rgb), 0.82) 60%,
+    rgba(var(--bg-color-rgb), 0) 100%
+  );
 }
 
 .content {
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .loading-block {
@@ -389,17 +402,72 @@ onShow(() => {
   font-size: 24rpx;
 }
 
+.profile-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 0 40rpx 48rpx;
+  border-bottom-left-radius: 72rpx;
+  border-bottom-right-radius: 72rpx;
+  background: var(--profile-hero-bg);
+  box-shadow: var(--profile-hero-shadow);
+}
+
+.hero-layer {
+  position: absolute;
+  pointer-events: none;
+}
+
+.hero-layer--glow {
+  border-radius: 999rpx;
+  filter: blur(80rpx);
+  mix-blend-mode: multiply;
+}
+
+.hero-layer--glow-right {
+  width: 80%;
+  height: 80%;
+  right: -20%;
+  top: -20%;
+  background: rgba(var(--primary-color-rgb), 0.1);
+  animation: hero-pulse 8s ease-in-out infinite;
+}
+
+.hero-layer--glow-left {
+  width: 60%;
+  height: 60%;
+  left: -10%;
+  top: 10%;
+  background: rgba(var(--primary-color-rgb), 0.05);
+  filter: blur(60rpx);
+}
+
+@keyframes hero-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
 .profile-section {
-  background: var(--profile-card);
-  padding: 48rpx 40rpx;
   display: flex;
   align-items: center;
   gap: 32rpx;
-  border-bottom: 1rpx solid var(--profile-border-soft);
+  padding-top: 24rpx;
 }
 
 .profile-section:active {
-  background: #f8fafc;
+  opacity: 0.85;
 }
 
 .profile-avatar {
@@ -407,22 +475,37 @@ onShow(() => {
   flex-shrink: 0;
 }
 
-.avatar-ring {
-  width: 144rpx;
-  height: 144rpx;
-  border-radius: 999rpx;
-  padding: 4rpx;
-  background: #ffffff;
-  border: 1rpx solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.06);
+.avatar-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 38rpx;
+  background: rgba(var(--primary-color-rgb), 0.2);
+  filter: blur(40rpx);
+  transform: scale(0.9) translateY(8rpx);
 }
 
-.avatar-inner {
+.avatar-card {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 45rpx;
+  padding: 10rpx;
+  background: var(--profile-card);
+  border: 2rpx solid rgba(var(--profile-card-rgb), 0.6);
+  box-shadow:
+    0 32rpx 40rpx -8rpx rgba(15, 23, 42, 0.12),
+    0 16rpx 16rpx -8rpx rgba(15, 23, 42, 0.06);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-frame {
   width: 100%;
   height: 100%;
-  border-radius: 999rpx;
+  border-radius: 35rpx;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--profile-avatar-bg);
+  box-sizing: border-box;
 }
 
 .avatar-image {
@@ -430,150 +513,192 @@ onShow(() => {
   height: 100%;
 }
 
+.avatar-status {
+  position: absolute;
+  bottom: -8rpx;
+  right: -8rpx;
+  background: var(--profile-card);
+  border-radius: 999rpx;
+  padding: 6rpx;
+  border: 2rpx solid var(--profile-border-stronger);
+  box-shadow: 0 6rpx 12rpx rgba(15, 23, 42, 0.12);
+}
+
+.status-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 999rpx;
+  background: #10b981;
+  border: 4rpx solid var(--profile-card);
+}
+
 .profile-basic {
   flex: 1;
   min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 10rpx;
 }
 
 .display-name {
-  font-size: 38rpx;
+  font-size: 44rpx;
   font-weight: 700;
   color: var(--text-color);
-  line-height: 1.2;
+  line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.role-list {
-  margin-top: 12rpx;
+.profile-meta {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 16rpx;
 }
 
-.meta-chip {
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.role-chip {
   font-size: 20rpx;
-  font-family: 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
-  color: var(--third-text-color);
-  background: #f8fafc;
-  border: 1rpx solid #e2e8f0;
-  padding: 4rpx 12rpx;
-  border-radius: 12rpx;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  background: rgba(var(--profile-card-rgb), 0.65);
+  border: 1rpx solid var(--profile-border-strong);
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
 }
 
 .profile-action {
-  margin-left: 16rpx;
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 20rpx;
-  display: flex;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--primary-color);
-  background: rgba(var(--primary-color-rgb), 0.12);
+  background: rgba(var(--primary-color-rgb), 0.08);
+  border: 1rpx solid rgba(var(--primary-color-rgb), 0.3);
 }
 
 .profile-action:active {
-  background: rgba(var(--primary-color-rgb), 0.2);
+  background: rgba(var(--primary-color-rgb), 0.16);
 }
 
-.action-icon {
-  font-size: 32rpx;
+.profile-action-icon {
+  width: 28rpx;
+  height: 28rpx;
+  font-size: 28rpx;
 }
 
 .refreshing-tip {
-  margin: 12rpx 40rpx 0;
+  margin: 16rpx 40rpx 0;
   font-size: 22rpx;
   color: var(--secondary-text-color);
 }
 
 .stats-panel {
-  background: var(--profile-card);
-  border-top: 1rpx solid var(--profile-border-soft);
-  border-bottom: 1rpx solid var(--profile-border-soft);
+  margin-top: 48rpx;
+  margin-left: -12rpx;
+  margin-right: -12rpx;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 24rpx;
+  padding: 0 12rpx;
 }
 
 .stats-item {
-  padding: 36rpx 12rpx;
+  padding: 12rpx 4rpx 8rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8rpx;
+  gap: 6rpx;
   position: relative;
+  transition: color 0.2s ease;
+  cursor: pointer;
 }
 
-.stats-item:not(:first-child) {
-  border-left: 1rpx solid rgba(226, 232, 240, 0.7);
+.stats-item:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6rpx;
+  bottom: 6rpx;
+  width: 1rpx;
+  background: var(--profile-border-strong);
 }
 
 .stats-item--alert::after {
   content: '';
   position: absolute;
-  top: 24rpx;
-  right: 24rpx;
-  width: 12rpx;
-  height: 12rpx;
+  top: 4rpx;
+  right: 12rpx;
+  width: 10rpx;
+  height: 10rpx;
   border-radius: 50%;
   background: var(--danger-color);
-  border: 2rpx solid #ffffff;
+  border: 2rpx solid rgba(var(--profile-card-rgb), 0.9);
 }
 
 .stat-label {
-  font-size: 20rpx;
+  font-size: 18rpx;
   font-weight: 700;
-  color: var(--secondary-text-color);
+  color: var(--third-text-color);
   letter-spacing: 4rpx;
   text-transform: uppercase;
+  transition: color 0.2s ease;
 }
 
 .stat-value {
-  font-size: 44rpx;
+  font-size: 40rpx;
   font-weight: 700;
-  color: var(--text-color);
-  line-height: 1.1;
+  color: #1e293b;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
 }
 
-.stat-sparkline {
-  display: flex;
-  align-items: flex-end;
-  gap: 4rpx;
-  height: 36rpx;
-  opacity: 0.8;
+.stats-item:active .stat-value,
+.stats-item:active .stat-label {
+  color: var(--primary-color);
 }
 
-.stat-bar {
-  width: 6rpx;
-  border-radius: 2rpx;
-  background-color: rgba(var(--tone-rgb), var(--bar-opacity, 1));
+@media (hover: hover) {
+  .stats-item:hover .stat-value,
+  .stats-item:hover .stat-label {
+    color: var(--primary-color);
+  }
 }
 
 .section-label {
-  padding: 24rpx 40rpx 12rpx;
-  font-size: 20rpx;
+  padding: 32rpx 40rpx 12rpx;
+  font-size: 24rpx;
   font-weight: 700;
-  color: var(--secondary-text-color);
-  letter-spacing: 4rpx;
+  color: var(--third-text-color);
+  letter-spacing: 6rpx;
   text-transform: uppercase;
 }
 
 .menu-section {
   background: var(--profile-card);
-  border-top: 1rpx solid var(--profile-border-soft);
-  border-bottom: 1rpx solid var(--profile-border-soft);
-  margin-bottom: 16rpx;
+  border-top: 1rpx solid var(--profile-border);
+  border-bottom: 1rpx solid var(--profile-border);
+  margin-bottom: 20rpx;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
   gap: 24rpx;
-  padding: 32rpx 40rpx;
-  border-bottom: 1rpx solid rgba(226, 232, 240, 0.6);
+  padding: 24rpx 40rpx;
+  border-bottom: 1rpx solid var(--profile-divider);
+  transition: background-color 0.2s ease;
 }
 
 .menu-item:last-child {
@@ -581,63 +706,105 @@ onShow(() => {
 }
 
 .menu-item--active {
-  background: #f8fafc;
+  background: var(--profile-soft-bg);
 }
 
 .menu-item--active .menu-icon {
-  color: var(--primary-color);
+  transform: scale(1.05);
 }
 
 .menu-icon {
-  font-size: 44rpx;
-  color: var(--secondary-text-color);
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 24rpx;
+  background: rgba(var(--primary-color-rgb), 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.menu-icon__glyph {
+  width: 40rpx;
+  height: 40rpx;
+  color: var(--primary-color);
+  font-size: 40rpx;
 }
 
 .menu-title {
   flex: 1;
   font-size: 28rpx;
-  font-weight: 500;
-  color: var(--text-color);
 }
 
 .menu-badge {
-  font-size: 20rpx;
-  color: var(--secondary-text-color);
-  background: #f8fafc;
-  border: 1rpx solid #e2e8f0;
-  padding: 4rpx 10rpx;
-  border-radius: 8rpx;
-  margin-right: 8rpx;
+  font-size: 24rpx;
+  color: #64748b;
+  background: var(--profile-soft-bg);
+  border: 1rpx solid var(--profile-border-strong);
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+  margin-right: 12rpx;
 }
 
 .menu-arrow {
   font-size: 32rpx;
-  color: var(--third-text-color);
+  color: #cbd5e1;
 }
 
 .logout-button {
-  background: var(--profile-card);
-  border-top: 1rpx solid var(--profile-border-soft);
-  border-bottom: 1rpx solid var(--profile-border-soft);
+  margin: 64rpx 48rpx 0;
   padding: 32rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
   text-align: center;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--danger-color);
-  margin-top: 48rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: rgba(var(--danger-color-rgb), 0.9);
+  background: var(--profile-card);
+  border: 1rpx solid rgba(var(--danger-color-rgb), 0.12);
+  border-radius: 24rpx;
+  letter-spacing: 5rpx;
+  text-transform: uppercase;
+  box-shadow: 0 6rpx 12rpx rgba(15, 23, 42, 0.06);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .logout-button:active {
-  background: #fef2f2;
+  background: rgba(var(--danger-color-rgb), 0.08);
+  border-color: rgba(var(--danger-color-rgb), 0.2);
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .logout-button:hover {
+    background: rgba(var(--danger-color-rgb), 0.08);
+    border-color: rgba(var(--danger-color-rgb), 0.2);
+  }
+}
+
+.logout-icon {
+  width: 32rpx;
+  height: 32rpx;
+  font-size: 32rpx;
+}
+
+.logout-text {
+  font-size: 26rpx;
+  font-weight: 700;
 }
 
 .version-text {
   padding: 24rpx 40rpx 40rpx;
   text-align: center;
   font-size: 20rpx;
-  color: var(--secondary-text-color);
+  color: var(--third-text-color);
   font-family: 'SFMono-Regular', 'Menlo', 'Courier New', monospace;
-  letter-spacing: 4rpx;
+  letter-spacing: 6rpx;
   text-transform: uppercase;
   opacity: 0.6;
 }
