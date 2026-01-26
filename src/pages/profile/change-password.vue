@@ -197,7 +197,7 @@ onShow(() => {
 
 :deep(.sar-navbar__fixation) {
   backdrop-filter: blur(12rpx);
-  border-bottom: 1rpx solid var(--change-border);
+  border-bottom: 0;
 }
 
 .login-card {
