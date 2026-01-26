@@ -3,9 +3,7 @@ import type { UserGender } from '@/api/types/login'
 import { toast } from 'sard-uniapp'
 import { updateUserProfile } from '@/api/methods/auth'
 import { t } from '@/locale'
-import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
-import { useTokenStore } from '@/store/token'
 import { handleBack } from '@/utils'
 import { uploadFileUrl, useUpload } from '@/utils/uploadFile'
 
@@ -17,7 +15,6 @@ definePage({
 })
 
 const userStore = useUserStore()
-const tokenStore = useTokenStore()
 const currentLocale = ref(uni.getLocale())
 
 const formRef = ref<any>(null)
@@ -59,8 +56,6 @@ function syncForm() {
 }
 
 async function refreshProfile() {
-  if (!tokenStore.hasLogin)
-    return
   loading.value = true
   try {
     await userStore.refreshUserInfo()
@@ -69,12 +64,6 @@ async function refreshProfile() {
   finally {
     loading.value = false
   }
-}
-
-function handleLogin() {
-  uni.navigateTo({
-    url: `${LOGIN_PAGE}?redirect=${encodeURIComponent('/pages/profile/edit-profile')}`,
-  })
 }
 
 function syncLocale() {
@@ -146,142 +135,131 @@ onShow(() => {
 
 <template>
   <view class="page">
-    <sar-navbar status-bar show-back fixed :title="navTitle" back-text="" @back="handleBack" />
+    <view class="header">
+      <sar-navbar status-bar show-back fixed :title="navTitle" back-text="" @back="handleBack" />
+      <view class="avatar-section">
+        <view class="avatar-wrapper">
+          <view class="avatar-frame">
+            <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" class="avatar-image" />
+            <view v-else class="avatar-placeholder i-carbon-user" />
+          </view>
+          <view class="avatar-edit">
+            <view class="i-carbon-edit" />
+          </view>
+          <!-- #ifndef MP-WEIXIN -->
+          <view class="avatar-overlay" @click="handleAvatarUpload" />
+          <!-- #endif -->
+          <!-- #ifdef MP-WEIXIN -->
+          <button
+            class="avatar-overlay"
+            open-type="chooseAvatar"
+            :disabled="avatarUploading"
+            @chooseavatar="onChooseAvatar"
+          />
+          <!-- #endif -->
+        </view>
+        <view class="avatar-actions">
+          <!-- #ifdef MP-WEIXIN -->
+          <button
+            class="avatar-change-btn"
+            open-type="chooseAvatar"
+            :disabled="avatarUploading"
+            @chooseavatar="onChooseAvatar"
+          >
+            {{ avatarActionText }}
+          </button>
+          <!-- #endif -->
+          <!-- #ifndef MP-WEIXIN -->
+          <sar-button
+            type="text"
+            theme="primary"
+            inline
+            root-class="avatar-change-btn"
+            :loading="avatarUploading"
+            @click="handleAvatarUpload"
+          >
+            {{ avatarActionText }}
+          </sar-button>
+          <!-- #endif -->
+        </view>
+      </view>
+    </view>
 
     <view class="content">
-      <view v-if="!tokenStore.hasLogin" class="login-card">
-        <view class="login-title">
-          {{ $t('profile.login.required') }}
-        </view>
-        <sar-button type="default" theme="primary" root-class="login-btn" @click="handleLogin">
-          {{ $t('profile.login.button') }}
-        </sar-button>
+      <view v-if="loading" class="loading-block">
+        <sar-loading type="circular" />
+        <text class="loading-text">{{ $t('profile.edit.loading') }}</text>
       </view>
 
       <template v-else>
-        <view v-if="loading" class="loading-block">
-          <sar-loading type="circular" />
-          <text class="loading-text">{{ $t('profile.edit.loading') }}</text>
+        <view class="section-divider" />
+
+        <view class="section-label">
+          {{ $t('profile.edit.section.basic') }}
         </view>
 
-        <template v-else>
-          <view class="avatar-section">
-            <view class="avatar-wrapper">
-              <view class="avatar-frame">
-                <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" class="avatar-image" />
-                <view v-else class="avatar-placeholder i-carbon-user" />
-              </view>
-              <view class="avatar-edit">
-                <view class="i-carbon-edit" />
-              </view>
-              <!-- #ifndef MP-WEIXIN -->
-              <view class="avatar-overlay" @click="handleAvatarUpload" />
-              <!-- #endif -->
-              <!-- #ifdef MP-WEIXIN -->
-              <button
-                class="avatar-overlay"
-                open-type="chooseAvatar"
-                :disabled="avatarUploading"
-                @chooseavatar="onChooseAvatar"
+        <view class="form-section">
+          <sar-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            label-width="160rpx"
+            direction="horizontal"
+            content-position="right"
+            root-class="form-root"
+          >
+            <sar-form-item name="nickName" :label="$t('profile.edit.form.nickname.label')" required root-class="form-item">
+              <sar-input
+                v-model="form.nickName"
+                :placeholder="$t('profile.edit.form.nickname.placeholder')"
+                inlaid
+                root-class="form-input"
               />
-              <!-- #endif -->
-            </view>
-            <view class="avatar-actions">
-              <!-- #ifdef MP-WEIXIN -->
-              <button
-                class="avatar-change-btn"
-                open-type="chooseAvatar"
-                :disabled="avatarUploading"
-                @chooseavatar="onChooseAvatar"
-              >
-                {{ avatarActionText }}
-              </button>
-              <!-- #endif -->
-              <!-- #ifndef MP-WEIXIN -->
-              <sar-button
-                type="text"
-                theme="primary"
-                inline
-                root-class="avatar-change-btn"
-                :loading="avatarUploading"
-                @click="handleAvatarUpload"
-              >
-                {{ avatarActionText }}
-              </sar-button>
-              <!-- #endif -->
-            </view>
-            <view class="avatar-tip">
-              {{ $t('profile.edit.avatar.tip') }}
-            </view>
-          </view>
+            </sar-form-item>
+            <sar-form-item name="sex" :label="$t('profile.edit.form.gender.label')" required root-class="form-item">
+              <sar-radio-group
+                v-model="form.sex"
+                :options="sexOptions"
+                direction="horizontal"
+                root-class="form-radio-group"
+              />
+            </sar-form-item>
+            <sar-form-item name="phoneNumber" :label="$t('profile.edit.form.phone.label')" root-class="form-item">
+              <sar-input
+                v-model="form.phoneNumber"
+                :placeholder="$t('profile.edit.form.phone.placeholder')"
+                inputmode="tel"
+                inlaid
+                root-class="form-input"
+              />
+            </sar-form-item>
+            <sar-form-item name="email" :label="$t('profile.edit.form.email.label')" root-class="form-item">
+              <sar-input
+                v-model="form.email"
+                :placeholder="$t('profile.edit.form.email.placeholder')"
+                inputmode="email"
+                inlaid
+                root-class="form-input"
+              />
+            </sar-form-item>
+          </sar-form>
+        </view>
 
-          <view class="section-label">
-            {{ $t('profile.edit.section.basic') }}
-          </view>
+        <view class="form-tip">
+          {{ $t('profile.edit.form.tip') }}
+        </view>
 
-          <view class="form-section">
-            <sar-form
-              ref="formRef"
-              :model="form"
-              :rules="rules"
-              label-width="160rpx"
-              direction="horizontal"
-              content-position="right"
-              root-class="form-root"
-            >
-              <sar-form-item name="nickName" :label="$t('profile.edit.form.nickname.label')" required root-class="form-item">
-                <sar-input
-                  v-model="form.nickName"
-                  :placeholder="$t('profile.edit.form.nickname.placeholder')"
-                  inlaid
-                  root-class="form-input"
-                />
-              </sar-form-item>
-              <sar-form-item name="sex" :label="$t('profile.edit.form.gender.label')" required root-class="form-item">
-                <sar-radio-group
-                  v-model="form.sex"
-                  :options="sexOptions"
-                  direction="horizontal"
-                  root-class="form-radio-group"
-                />
-              </sar-form-item>
-              <sar-form-item name="phoneNumber" :label="$t('profile.edit.form.phone.label')" root-class="form-item">
-                <sar-input
-                  v-model="form.phoneNumber"
-                  :placeholder="$t('profile.edit.form.phone.placeholder')"
-                  inputmode="tel"
-                  inlaid
-                  root-class="form-input"
-                />
-              </sar-form-item>
-              <sar-form-item name="email" :label="$t('profile.edit.form.email.label')" root-class="form-item">
-                <sar-input
-                  v-model="form.email"
-                  :placeholder="$t('profile.edit.form.email.placeholder')"
-                  inputmode="email"
-                  inlaid
-                  root-class="form-input"
-                />
-              </sar-form-item>
-            </sar-form>
-          </view>
-
-          <view class="form-tip">
-            {{ $t('profile.edit.form.tip') }}
-          </view>
-
-          <view class="footer">
-            <sar-button
-              type="default"
-              theme="primary"
-              root-class="save-btn"
-              :loading="saving"
-              @click="handleSave"
-            >
-              {{ $t('profile.edit.save.button') }}
-            </sar-button>
-          </view>
-        </template>
+        <view class="footer">
+          <sar-button
+            type="default"
+            theme="primary"
+            root-class="save-btn"
+            :loading="saving"
+            @click="handleSave"
+          >
+            {{ $t('profile.edit.save.button') }}
+          </sar-button>
+        </view>
       </template>
     </view>
   </view>
@@ -290,48 +268,34 @@ onShow(() => {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: var(--bg-color);
   color: var(--text-color);
   line-height: 1.5;
-  --edit-primary-hover: #535bf2;
-  --edit-border: #e5e7eb;
-  --sar-navbar-bg: rgba(255, 255, 255, 0.95);
-  --sar-navbar-title-color: var(--text-color);
-  --sar-navbar-item-color: var(--text-color);
+  --edit-primary-hover: rgba(var(--primary-color-rgb), 0.85);
+  --edit-border: rgba(var(--sar-border-color-rgb), 0.6);
+  --sar-navbar-bg: transparent;
   --sar-navbar-title-font-size: 32rpx;
+}
+
+.header {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% -20%, rgba(var(--primary-color-rgb), 0.16), transparent 70%),
+    linear-gradient(180deg, rgba(var(--sar-emphasis-bg-rgb), 0) 0%, rgba(var(--sar-emphasis-bg-rgb), 1) 100%);
+  background-color: var(--sar-emphasis-bg);
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--sar-emphasis-bg);
 }
 
 :deep(.sar-navbar__fixation) {
-  backdrop-filter: blur(16rpx);
-  border-bottom: 1rpx solid var(--edit-border);
-}
-
-.login-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16rpx;
-  margin: 32rpx;
-  padding: 48rpx 24rpx;
-  border-radius: 16rpx;
-  border: 1rpx solid var(--edit-border);
-  background: #ffffff;
-}
-
-.login-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-:deep(.login-btn) {
-  width: 60%;
+  backdrop-filter: none;
+  background: transparent;
+  border-bottom: 0;
 }
 
 .loading-block {
@@ -350,8 +314,8 @@ onShow(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 64rpx 32rpx 48rpx;
-  border-bottom: 1rpx solid var(--edit-border);
+  padding: 48rpx 48rpx 40rpx;
+  border-bottom: 0;
 }
 
 .avatar-wrapper {
@@ -365,12 +329,12 @@ onShow(() => {
   height: 100%;
   border-radius: 999rpx;
   overflow: hidden;
-  border: 2rpx solid #f8f9fa;
-  background: #f8f9fa;
+  border: 6rpx solid var(--sar-emphasis-bg);
+  background: var(--bg-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.06);
+  box-shadow: 0 20rpx 80rpx -20rpx rgba(var(--primary-color-rgb), 0.18);
 }
 
 .avatar-image {
@@ -387,16 +351,18 @@ onShow(() => {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 44rpx;
-  height: 44rpx;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 999rpx;
   background: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid #ffffff;
   color: #ffffff;
-  box-shadow: 0 4rpx 8rpx rgba(15, 23, 42, 0.12);
+  box-shadow:
+    0 0 0 8rpx var(--sar-emphasis-bg),
+    0 6rpx 12rpx rgba(15, 23, 42, 0.12);
+  transform: translate(6rpx, 6rpx);
 }
 
 .avatar-overlay {
@@ -416,15 +382,20 @@ onShow(() => {
 }
 
 .avatar-actions {
-  margin-top: 16rpx;
+  margin-top: 24rpx;
 }
 
 :deep(.avatar-change-btn) {
   background: transparent;
   border: 0;
-  font-size: 24rpx;
+  padding: 0;
+  font-size: 26rpx;
   font-weight: 500;
   color: var(--primary-color);
+}
+
+:deep(.avatar-change-btn)::after {
+  border: 0;
 }
 
 .avatar-change-btn:active {
@@ -435,20 +406,20 @@ onShow(() => {
   opacity: 0.6;
 }
 
-.avatar-tip {
-  margin-top: 8rpx;
-  font-size: 22rpx;
-  color: var(--secondary-text-color);
+.section-divider {
+  height: 24rpx;
+  background: rgba(var(--bg-color-rgb), 1);
 }
 
 .section-label {
   padding: 24rpx 32rpx;
-  background: rgba(248, 249, 250, 0.7);
   border-bottom: 1rpx solid var(--edit-border);
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 600;
   color: var(--secondary-text-color);
-  letter-spacing: 2rpx;
+  letter-spacing: 4rpx;
+  text-transform: uppercase;
+  opacity: 0.8;
 }
 
 .form-section {
