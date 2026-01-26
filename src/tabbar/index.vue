@@ -77,7 +77,7 @@ onShow(() => {
 
 <template>
   <view v-if="customTabbarEnable" class="h-50px pb-safe">
-    <view class="border-and-fixed bg-white" @touchmove.stop.prevent>
+    <view class="border-and-fixed z-99 bg-white" @touchmove.stop.prevent>
       <view class="h-50px flex items-center">
         <view
           v-for="(item, index) in tabbarList" :key="index"
